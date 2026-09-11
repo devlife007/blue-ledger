@@ -11,7 +11,6 @@ import {
   ChevronRight,
   Menu,
   X,
-  Warehouse,
   CalendarDays,
 } from 'lucide-react';
 import Avatar from '../ui/Avatar';
@@ -95,8 +94,8 @@ export default function DashboardLayout({
             <div className="absolute -right-16 -top-16 h-48 w-48 rounded-full bg-brand/10 blur-3xl" />
             <div className="absolute -bottom-20 -left-10 h-40 w-40 rounded-full bg-brand/5 blur-3xl" />
             <div className="relative flex h-24 items-center gap-3.5 px-6">
-              <div className="grid h-12 w-12 shrink-0 place-items-center bg-brand text-navy-950 shadow-lg shadow-black/40">
-                <Warehouse className="h-6 w-6" />
+              <div className="grid h-12 w-12 shrink-0 place-items-center overflow-hidden rounded-xl bg-white/95 p-1.5 ring-1 ring-line shadow-lg shadow-black/40">
+                <img src="/logo.png" alt="Logo" className="h-full w-full object-contain" />
               </div>
               <div className="min-w-0 leading-tight">
                 <div className="truncate text-base font-extrabold text-ink">{title}</div>
@@ -246,8 +245,8 @@ export default function DashboardLayout({
       >
         <div className="flex h-16 items-center justify-between px-5 border-b border-line">
           <Link to="/" className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-brand text-navy-950 text-sm font-extrabold shadow-lg shadow-black/40">
-              W
+            <div className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-xl bg-white/95 p-1 ring-1 ring-line">
+              <img src="/logo.png" alt="Logo" className="h-full w-full object-contain" />
             </div>
             <span className="text-lg font-bold tracking-tight text-ink">
               Quincaillerie <span className="text-brand">NG</span>

@@ -209,7 +209,7 @@ const Auth: React.FC<{ initialMode?: AuthMode }> = ({ initialMode = 'signin' }) 
     const isError = tone === 'error';
     return (
       <div
-        className={`flex items-start gap-3 rounded-xl px-4 py-3.5 text-sm ring-1 ${
+        className={`flex items-start gap-3 rounded-xl px-3.5 py-2.5 text-[13px] ring-1 ${
           isError ? 'bg-red-500/10 text-red-300 ring-red-500/30' : 'bg-emerald-500/10 text-emerald-300 ring-emerald-500/30'
         }`}
         role="alert"
@@ -316,7 +316,7 @@ const Auth: React.FC<{ initialMode?: AuthMode }> = ({ initialMode = 'signin' }) 
               </div>
               <div>
                 <p className="text-[15px] font-extrabold leading-tight tracking-tight text-ink">
-                  Quincaillerie Nouvelle Génération
+                  Quincaillerie New Generation
                 </p>
                 <p className="text-[12px] font-medium text-brand">Building & hardware supplies</p>
               </div>
@@ -353,11 +353,14 @@ const Auth: React.FC<{ initialMode?: AuthMode }> = ({ initialMode = 'signin' }) 
       {/* ---- Right auth panel (40%) ---- */}
       <main className="flex w-full flex-1 items-center justify-center bg-navy-900 px-4 py-10 sm:px-8 lg:w-[40%] lg:py-0">
         <div className="qng-fade w-full max-w-md">
-          <div className="rounded-3xl border border-line bg-navy-850 p-7 shadow-2xl shadow-black/50 sm:p-9">
-            <div className="mb-7 flex flex-col items-center gap-2.5 text-center">
-            
+          <div className="rounded-3xl border border-line bg-navy-850 p-6 shadow-2xl shadow-black/50 sm:p-7">
+            <div className="mb-5 flex flex-col items-center gap-2 text-center">
+              <div className="grid h-14 w-14 place-items-center overflow-hidden rounded-2xl bg-white/95 p-2 ring-1 ring-line shadow-lg shadow-black/40">
+                <img src="/logo.png" alt="Quincaillerie Nouvelle Génération" className="h-full w-full object-contain" />
+              </div>
               <div>
-
+                <div className="text-base font-extrabold tracking-tight text-ink">Quincaillerie NG</div>
+                <div className="text-[11px] font-medium text-muted">Nouvelle Génération</div>
               </div>
             </div>
 
@@ -369,9 +372,9 @@ const Auth: React.FC<{ initialMode?: AuthMode }> = ({ initialMode = 'signin' }) 
             )}
 
             {mode === 'signin' ? (
-              <form onSubmit={handleSignin} key="signin" className="space-y-5">
+              <form onSubmit={handleSignin} key="signin" className="space-y-4">
                 <div>
-                  <h1 className="text-[26px] font-extrabold tracking-tight text-ink">Welcome Back</h1>
+                  <h1 className="text-[22px] font-extrabold tracking-tight text-ink">Welcome Back</h1>
                   <p className="mt-1 text-sm text-muted">Sign in to your account to continue.</p>
                 </div>
 
@@ -433,15 +436,15 @@ const Auth: React.FC<{ initialMode?: AuthMode }> = ({ initialMode = 'signin' }) 
                 <button
                   type="button"
                   onClick={() => switchMode('signup')}
-                  className="w-full rounded-xl border border-line bg-transparent py-3 text-[15px] font-semibold text-ink transition-colors hover:border-brand/50 hover:bg-brand/5 hover:text-brand cursor-pointer"
+                  className="w-full rounded-xl border border-line bg-transparent py-2.5 text-[14px] font-semibold text-ink transition-colors hover:border-brand/50 hover:bg-brand/5 hover:text-brand cursor-pointer"
                 >
                   Create an Account
                 </button>
               </form>
             ) : (
-              <form onSubmit={handleSignup} key="signup" className="space-y-4">
+              <form onSubmit={handleSignup} key="signup" className="space-y-3">
                 <div>
-                  <h1 className="text-[26px] font-extrabold tracking-tight text-ink">Create your account</h1>
+                  <h1 className="text-[22px] font-extrabold tracking-tight text-ink">Create your account</h1>
                   <p className="mt-1 text-sm text-muted">
                     We'll set up Kigali, Musanze and Muhanga for you right away.
                   </p>
@@ -500,7 +503,7 @@ const Auth: React.FC<{ initialMode?: AuthMode }> = ({ initialMode = 'signin' }) 
                     showToggle={{ show: showPassword, onToggle: () => setShowPassword(!showPassword) }}
                   />
                   {passwordTouched && (
-                    <div className="mt-2.5 qng-fade">
+                    <div className="mt-1.5 qng-fade">
                       <div className="flex gap-1.5">
                         {[1, 2, 3, 4].map((i) => (
                           <div
@@ -510,7 +513,7 @@ const Auth: React.FC<{ initialMode?: AuthMode }> = ({ initialMode = 'signin' }) 
                           />
                         ))}
                       </div>
-                      <p className="mt-1.5 text-xs text-muted">
+                      <p className="mt-1 text-[11px] text-muted">
                         Password strength:{' '}
                         <span className={`font-semibold ${strengthTextColors[strength]}`}>
                           {strengthLabels[strength]}
@@ -534,11 +537,11 @@ const Auth: React.FC<{ initialMode?: AuthMode }> = ({ initialMode = 'signin' }) 
                     showToggle={{ show: showConfirm, onToggle: () => setShowConfirm(!showConfirm) }}
                   />
                   {confirmMismatch && (
-                    <p className="mt-1.5 text-xs font-semibold text-red-400">These passwords don't match.</p>
+                    <p className="mt-1 text-[11px] font-semibold text-red-400">These passwords don't match.</p>
                   )}
                 </div>
 
-                <label className="flex cursor-pointer select-none items-start gap-2.5 pt-1 text-sm text-muted">
+                <label className="flex cursor-pointer select-none items-start gap-2 pt-0.5 text-[13px] text-muted">
                   <input
                     type="checkbox"
                     checked={agreeTerms}
@@ -569,14 +572,14 @@ const Auth: React.FC<{ initialMode?: AuthMode }> = ({ initialMode = 'signin' }) 
                 <button
                   type="button"
                   onClick={() => switchMode('signin')}
-                  className="w-full rounded-xl border border-line bg-transparent py-3 text-[15px] font-semibold text-ink transition-colors hover:border-brand/50 hover:bg-brand/5 hover:text-brand cursor-pointer"
+                  className="w-full rounded-xl border border-line bg-transparent py-2.5 text-[14px] font-semibold text-ink transition-colors hover:border-brand/50 hover:bg-brand/5 hover:text-brand cursor-pointer"
                 >
                   I already have an account
                 </button>
               </form>
             )}
 
-            <p className="mt-6 text-center text-sm text-muted">
+            <p className="mt-4 text-center text-sm text-muted">
               {mode === 'signin' ? (
                 <>
                   Don't have an account?{' '}
@@ -603,7 +606,7 @@ const Auth: React.FC<{ initialMode?: AuthMode }> = ({ initialMode = 'signin' }) 
             </p>
           </div>
 
-          <p className="mt-6 text-center text-xs text-muted/70">
+          <p className="mt-4 text-center text-xs text-muted/70">
             © {new Date().getFullYear()} Quincaillerie Nouvelle Génération — Kigali · Musanze · Muhanga
           </p>
         </div>
