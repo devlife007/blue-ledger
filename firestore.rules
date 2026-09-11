@@ -1,0 +1,172 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ==================================================================
+    // Blue-Ledger Firestore rules
+    // ------------------------------------------------------------------
+    // Tenant model:
+    //   admin.companyId == admin.uid   (admin's profile doc id == their UID
+    //                                   == the companyId they own)
+    //   worker .companyId == admin.uid (points at the owning admin)
+    //   worker .createdBy  == admin.uid (the admin who provisioned them)
+    //
+    // IMPORTANT (list queries):
+    //   Firestore does NOT filter query results for you — if a query could
+    //   match a doc the caller may not read, the WHOLE query is denied with
+    //   "Missing or insufficient permissions". Every list query in the app
+    //   therefore MUST include `.where('companyId', '==', <own companyId>)`.
+    //   All pages do this (AdminDashboard, WorkerDashboard, Branches,
+    //   Reports, Activity, Settings, WorkerDetails).
+    // ==================================================================
+
+    // ---- helpers -----------------------------------------------
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function myProfile() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid));
+    }
+
+    function hasProfile() {
+      return exists(/databases/$(database)/documents/users/$(request.auth.uid));
+    }
+
+    // The calling user's company id (granting that their companyId is set).
+    function myCompanyId() {
+      return myProfile().data.companyId;
+    }
+
+    function isAdmin() {
+      return signedIn()
+        && hasProfile()
+        && myProfile().data.role == 'admin';
+    }
+
+    // Admin of THIS company (companyId == their own UID).
+    function isAdminOf(companyId) {
+      return isAdmin() && companyId == request.auth.uid;
+    }
+
+    // Caller belongs to the given company.
+    function isMemberOf(companyId) {
+      return signedIn()
+        && hasProfile()
+        && myProfile().data.companyId == companyId;
+    }
+
+    function isWorkerOf(companyId) {
+      return signedIn()
+        && hasProfile()
+        && myProfile().data.role == 'worker'
+        && myProfile().data.companyId == companyId;
+    }
+
+    // ---- users: docId = Firebase UID ----------------------------
+
+    match /users/{uid} {
+      allow get: if signedIn() && (
+        resource == null                                // own doc may not exist yet (signup race)
+        || resource.data.uid == request.auth.uid        // own profile
+        || (isAdmin() && resource.data.companyId == request.auth.uid) // admin reads a company member
+      );
+
+      // Admin queries workers of their company.
+      // Query shapes used:
+      //   users.where(companyId==N)                      (Branches)
+      //   users.where(companyId==N).where(role=='worker') (Settings)
+      //   users.where(role=='worker').where(companyId==N).where(createdBy==N) (AdminDashboard)
+      allow list: if isAdminOf(resource.data.companyId);
+
+      // Signup creates own profile; admin provisions workers.
+      allow create: if signedIn()
+          && request.resource.data.uid == request.auth.uid)               // signup/self
+        || (isAdmin()
+          && request.resource.data.companyId == request.auth.uid
+          && request.resource.data.role == 'worker'
+          && request.resource.data.createdBy == request.auth.uid);        // admin -> worker
+
+      // Admin manages company members (activate/deactivate, assign branch/name).
+      allow update: if isAdminOf(resource.data.companyId);
+
+      // Admin deletes company members.
+      allow delete: if isAdminOf(resource.data.companyId);
+    }
+
+    // ---- companies: docId = admin's UID --------------------------
+
+    match /companies/{companyId} {
+      allow get: if signedIn() && (
+        resource == null
+        || request.auth.uid == companyId
+        || resource.data.ownerUid == request.auth.uid
+      );
+
+      allow list: if isAdmin();
+
+      // Signup: admin creates the record bound to their own UID.
+      allow create: if signedIn()
+        && request.resource.data.ownerUid == request.auth.uid
+        && request.resource.data.companyId == request.auth.uid;
+
+      allow update, delete: if signedIn()
+        && (request.auth.uid == companyId
+          || resource.data.ownerUid == request.auth.uid);
+    }
+
+    // ---- branches: company-scoped --------------------------------
+
+    match /branches/{branchId} {
+      allow get: if isMemberOf(resource.data.companyId);
+      allow list: if isMemberOf(resource.data.companyId);
+
+      // Signup seeds Kigali/Musanze/Muhanga; admin adds more later.
+      allow create: if isAdmin()
+        && request.resource.data.companyId == request.auth.uid
+        && request.resource.data.createdBy == request.auth.uid;
+
+      allow update, delete: if isAdminOf(resource.data.companyId);
+    }
+
+    // ---- products: company-scoped inventory ----------------------
+
+    match /products/{productId} {
+      // Query shape used: products.where(companyId==N)
+      allow get: if isMemberOf(resource.data.companyId);
+      allow list: if isMemberOf(resource.data.companyId);
+
+      allow create: if isAdmin()
+        && request.resource.data.companyId == request.auth.uid;
+
+      // Admin restocks / edits; worker sells (decrements qty) inside a
+      // transaction that reads the product first (tx.get needs get access).
+      allow update: if isAdminOf(resource.data.companyId)
+        || isWorkerOf(resource.data.companyId);
+
+      allow delete: if isAdminOf(resource.data.companyId);
+    }
+
+    // ---- messages: company-scoped worker <-> admin chat -----------
+
+    match /messages/{messageId} {
+      // Query shapes used:
+      //   messages.where(companyId==N)
+      //   messages.where(companyId==N).where(fromUid==U)
+      allow get: if isMemberOf(resource.data.companyId);
+      allow list: if isMemberOf(resource.data.companyId);
+
+      allow create: if signedIn()
+        && request.resource.data.fromUid == request.auth.uid
+        && request.resource.data.companyId == myCompanyId();
+
+      // Admin likes a message.
+      allow update: if isAdminOf(resource.data.companyId);
+
+      // Sender deletes their own message; admin deletes any company message.
+      allow delete: if resource.data.fromUid == request.auth.uid
+        || isAdminOf(resource.data.companyId);
+    }
+  }
+}

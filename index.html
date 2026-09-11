@@ -1,18 +1,46 @@
 
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
 <head>
   <meta charset="UTF-8">
    <link rel="icon" type="image/png" href="/logo.png" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="WareNova is a smart sales tracking and inventory management system helping businesses manage stock and monitor sales easily.">
-   <meta name="keywords" content="sales tracking, inventory system, business dashboard, Warenova">
+  <meta name="description" content="Quincaillerie Nouvelle Génération — vente de matériaux de construction à Kigali, Musanze et Muhanga. Suivi des ventes et de l'inventaire en temps réel.">
+   <meta name="keywords" content="matériaux de construction, quincaillerie, Rwanda, Kigali, Musanze, Muhanga, inventaire, suivi des ventes">
    <meta name="google-site-verification" content="PYJADXEgMGUT29eFpcRR7apnucvCeGXIS84uHs54V_Q" />
-  <meta name="author" content="Victor">
+  <meta name="author" content="Quincaillerie Nouvelle Génération">
   
-  <title>WareNova - Sales Tracking</title>
+  <title>Quincaillerie Nouvelle Génération - Matériaux de Construction</title>
 
   <script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: {
+          navy: {
+            '950': '#04070C',
+            '900': '#07111A',
+            '850': '#0B1620',
+            '800': '#091521',
+            '750': '#0F1D2B',
+            '700': '#0D1B27',
+            '600': '#0A1620',
+            '500': '#132634',
+          },
+          brand: {
+            DEFAULT: '#FFC928',
+            bright: '#FFD21F',
+            dark: '#E8B400',
+          },
+          ink: '#F8FAFC',
+          muted: '#94A3B8',
+          line: '#263746',
+        },
+      },
+    },
+  };
+</script>
 <script type="importmap">
 {
   "imports": {
@@ -27,8 +55,11 @@
 </script>
 <link rel="stylesheet" href="/index.css">
 </head>
-<body class="bg-slate-50 text-slate-900 min-h-screen">
+<body class="bg-slate-50 text-slate-900 min-h-screen" style="font-family: 'Inter', system-ui, -apple-system, sans-serif;">
   <div id="root"></div>
-<script type="module" src="/index.tsx"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<script type="module" src="/src/index.tsx"></script>
 </body>
 </html>

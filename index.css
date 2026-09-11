@@ -1,0 +1,43 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: #07111a;
+  color: #f8fafc;
+}
+
+/* Thin, subtle scrollbars */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #07111a;
+}
+::-webkit-scrollbar-thumb {
+  background: #263746;
+  border-radius: 8px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #3a4d63;
+}
+
+/* Soft focus rings everywhere */
+:focus {
+  outline: none;
+}
+:focus-visible {
+  outline: 2px solid #ffc928;
+  outline-offset: 2px;
+}
+
+::selection {
+  background: rgba(255, 201, 40, 0.85);
+  color: #07111a;
+}

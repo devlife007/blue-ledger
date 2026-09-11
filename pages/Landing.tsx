@@ -1,319 +1,416 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import {
+  Package,
+  GitBranch,
+  Users,
+  BarChart3,
+  Cloud,
+  ShieldCheck,
+  ArrowRight,
+  CheckCircle2,
+  Sparkles,
+  ShoppingBag,
+  LayoutDashboard,
+  MessageSquare,
+  Eye,
+  TrendingUp,
+  Zap,
+} from 'lucide-react';
+
+const features = [
+  {
+    icon: Package,
+    title: 'Real-time Inventory Tracking',
+    desc: 'Watch your stock levels update instantly across every branch. No delays, no guesswork—just accurate numbers at all times.',
+  },
+  {
+    icon: GitBranch,
+    title: 'Multi-Branch Management',
+    desc: 'Manage multiple locations from a single dashboard. Transfer stock, compare performance, and keep everything in sync.',
+  },
+  {
+    icon: Users,
+    title: 'Team Collaboration',
+    desc: 'Keep your team connected with built-in messaging. Admins and workers can communicate without leaving the platform.',
+  },
+  {
+    icon: BarChart3,
+    title: 'Sales Analytics',
+    desc: 'Understand your business with clear charts and reports. Track revenue, top products, and sales trends effortlessly.',
+  },
+  {
+    icon: Cloud,
+    title: 'Cloud Image Uploads',
+    desc: 'Add product photos directly from your device. Images are stored securely in the cloud and available everywhere.',
+  },
+  {
+    icon: ShieldCheck,
+    title: 'Role-Based Access',
+    desc: 'Control what each team member can see and do. Admins have full access while workers focus on their daily tasks.',
+  },
+];
+
+const steps = [
+  {
+    icon: Sparkles,
+    title: 'Create Your Account',
+    desc: 'Sign up in seconds. No credit card required to get started with your free plan.',
+  },
+  {
+    icon: Package,
+    title: 'Add Your Products',
+    desc: 'Upload your inventory with names, prices, images, and quantities. Bulk import supported.',
+  },
+  {
+    icon: TrendingUp,
+    title: 'Start Selling',
+    desc: 'Begin tracking sales, monitoring stock, and growing your business from day one.',
+  },
+];
 
 const Landing: React.FC = () => {
   return (
-    <div className="min-h-screen bg-white text-slate-900 font-sans selection:bg-blue-100 selection:text-blue-900 overflow-x-hidden">
-      {/* Navigation */}
-      <nav className="fixed top-0 w-full bg-white/90 backdrop-blur-xl border-b border-slate-100 z-50">
-        <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
-          <Link to="/" className="flex flex-col group">
-            <span className="text-xl font-black uppercase tracking-tighter text-blue-600 group-hover:text-slate-900 transition-colors">WareNova</span>
-            <span className="text-[8px] font-bold uppercase tracking-[0.3em] text-slate-400">Enterprise Asset Sync</span>
+    <div className="min-h-screen bg-slate-50 text-slate-800 font-sans selection:bg-indigo-100 selection:text-indigo-900 overflow-x-hidden" style={{ fontFamily: "'Inter', system-ui, -apple-system, sans-serif" }}>
+      {/* Navbar */}
+      <nav className="fixed top-0 w-full bg-white/70 backdrop-blur-xl border-b border-slate-200/60 z-50 transition-all">
+        <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+          <Link to="/" className="flex items-center gap-2 group">
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-500/20 group-hover:shadow-indigo-500/40 transition-shadow">
+              <LayoutDashboard className="w-5 h-5 text-white" />
+            </div>
+            <span className="text-xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+              WareNova
+            </span>
           </Link>
-          <div className="hidden md:flex space-x-10 text-[10px] font-black uppercase tracking-widest text-slate-400">
-            <Link to="/how-it-works" className="hover:text-blue-600 transition-colors">Process</Link>
-            <Link to="/sectors" className="hover:text-blue-600 transition-colors">Sectors</Link>
-            <Link to="/infrastructure" className="hover:text-blue-600 transition-colors">Infrastructure</Link>
+
+          <div className="hidden md:flex items-center gap-8 text-sm font-medium text-slate-500">
+            <a href="#features" className="hover:text-slate-900 transition-colors">Features</a>
+            <a href="#how-it-works" className="hover:text-slate-900 transition-colors">How It Works</a>
+            <a href="#roles" className="hover:text-slate-900 transition-colors">Pricing</a>
           </div>
-          <Link 
-            to="/login" 
-            className="group flex items-center space-x-3 bg-slate-900 text-white px-6 py-3 font-black uppercase tracking-widest text-[11px] hover:bg-blue-600 transition-all shadow-xl active:translate-y-0.5"
-          >
-            <span>Operator Login</span>
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
-            </svg>
-          </Link>
+
+          <div className="flex items-center gap-3">
+            <Link
+              to="/login"
+              className="px-5 py-2 text-sm font-medium text-slate-600 hover:text-slate-900 rounded-full hover:bg-slate-100 transition-all"
+            >
+              Login
+            </Link>
+            <Link
+              to="/signup"
+              className="px-5 py-2 text-sm font-semibold text-white bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full hover:shadow-lg hover:shadow-indigo-500/25 active:scale-[0.98] transition-all"
+            >
+              Sign Up Free
+            </Link>
+          </div>
         </div>
       </nav>
 
       {/* Hero Section */}
-      <section className="max-w-7xl mx-auto px-6 pt-48 pb-32">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-20 items-center">
-          <div className="animate-in fade-in slide-in-from-left-8 duration-700">
-            <div className="inline-block px-4 py-1.5 bg-blue-50 text-blue-600 text-[10px] font-black uppercase tracking-[0.4em] mb-8 border border-blue-100">
-              Operational Intelligence v2.5
-            </div>
-            <h1 className="text-7xl md:text-8xl font-black text-slate-900 leading-[0.9] tracking-tighter mb-10 italic">
-              Precision <br/><span className="text-blue-600">Inventory.</span>
-            </h1>
-            <p className="text-lg text-slate-500 font-medium max-w-lg leading-relaxed mb-12">
-              The absolute source of truth for your stock. WareNova synchronizes your entire supply chain from warehouse floors to retail terminals in real-time.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-6">
-              <Link to="/signup" className="px-10 py-5 bg-blue-600 text-white font-black uppercase tracking-widest text-xs hover:bg-blue-700 transition-all shadow-2xl text-center">
-                Register Enterprise
-              </Link>
-              <Link to="/login" className="px-10 py-5 bg-white border-2 border-slate-900 text-slate-900 font-black uppercase tracking-widest text-xs hover:bg-slate-50 transition-all text-center">
-                Operator Portal
-              </Link>
-            </div>
-          </div>
-
-          <div className="relative group animate-in fade-in slide-in-from-right-8 duration-1000">
-            <div className="absolute -inset-10 bg-blue-600/5 blur-3xl rounded-full group-hover:bg-blue-600/10 transition-all"></div>
-            <div className="relative border-4 border-slate-900 shadow-[40px_40px_0px_#f1f5f9]">
-              <img 
-                src="https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&q=80&w=1200" 
-                alt="Logistics Operations" 
-                className="w-full h-[500px] object-cover filter grayscale group-hover:grayscale-0 transition-all duration-1000"
-              />
-              <div className="absolute top-10 -right-10 bg-blue-600 p-8 text-white hidden md:block shadow-2xl">
-                <span className="block text-[10px] font-black uppercase tracking-[0.3em] text-blue-200 mb-2">Network Health</span>
-                <span className="text-4xl font-black font-mono">100% UP</span>
-              </div>
-            </div>
-          </div>
+      <section className="relative pt-32 pb-20 lg:pt-40 lg:pb-32 overflow-hidden">
+        {/* Background gradient mesh */}
+        <div className="absolute inset-0 overflow-hidden">
+          <div className="absolute -top-40 -right-40 w-[600px] h-[600px] rounded-full bg-blue-400/10 blur-3xl" />
+          <div className="absolute top-20 -left-40 w-[500px] h-[500px] rounded-full bg-indigo-400/10 blur-3xl" />
+          <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[800px] h-[300px] rounded-full bg-violet-400/5 blur-3xl" />
         </div>
-      </section>
 
-      {/* Stats Ticker */}
-      <section className="bg-slate-900 py-12 text-white overflow-hidden border-y border-white/5">
-        <div className="max-w-7xl mx-auto px-6 grid grid-cols-2 md:grid-cols-4 gap-12 text-center">
-          <div>
-            <span className="block text-3xl font-black font-mono mb-2 text-blue-500">100ms</span>
-            <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">Avg Sync Latency</span>
-          </div>
-          <div>
-            <span className="block text-3xl font-black font-mono mb-2 text-blue-500">99.99%</span>
-            <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">Core Uptime</span>
-          </div>
-          <div>
-            <span className="block text-3xl font-black font-mono mb-2 text-blue-500">1.2M+</span>
-            <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">Daily Commits</span>
-          </div>
-          <div>
-            <span className="block text-3xl font-black font-mono mb-2 text-blue-500">500+</span>
-            <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">Enterprise Nodes</span>
-          </div>
-        </div>
-      </section>
-
-      {/* The 100ms Pulse - Technical Visualization */}
-      <section className="py-40 bg-white">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-32 items-center">
+        <div className="max-w-7xl mx-auto px-6 relative z-10">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center">
             <div>
-              <span className="text-blue-600 text-[10px] font-black uppercase tracking-[0.4em] mb-6 block">Latency Benchmark</span>
-              <h2 className="text-5xl font-black uppercase tracking-tighter leading-none mb-10 italic">The sub-second <br/>Advantage.</h2>
-              <p className="text-slate-500 mb-12 leading-relaxed">
-                Legacy ERP systems rely on polling cycles that leave inventory blind spots for seconds or even minutes. WareNova’s WebSocket sync core reduces this window to under 100ms globally.
+              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-indigo-50 border border-indigo-100 text-indigo-600 text-xs font-medium mb-8">
+                <Sparkles className="w-3.5 h-3.5" />
+                Free for small businesses
+              </div>
+              <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-slate-900 leading-[1.1] mb-6">
+                Smart inventory management for{' '}
+                <span className="bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 bg-clip-text text-transparent">
+                  modern businesses
+                </span>
+              </h1>
+              <p className="text-lg text-slate-500 leading-relaxed mb-10 max-w-lg">
+                Track stock across branches, empower your team, and make data-driven decisions—all from one beautifully simple dashboard.
               </p>
-              <div className="space-y-10">
-                <div>
-                   <div className="flex justify-between text-[10px] font-black uppercase mb-3"><span>Traditional Cloud DB</span><span className="text-rose-500">2.5s Lag</span></div>
-                   <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
-                      <div className="w-[85%] h-full bg-rose-500"></div>
-                   </div>
-                </div>
-                <div>
-                   <div className="flex justify-between text-[10px] font-black uppercase mb-3"><span>WareNova Sync Core</span><span className="text-blue-600">0.09s Lag</span></div>
-                   <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
-                      <div className="w-[8%] h-full bg-blue-600"></div>
-                   </div>
-                </div>
+              <div className="flex flex-col sm:flex-row gap-4">
+                <Link
+                  to="/signup"
+                  className="inline-flex items-center justify-center gap-2 px-7 py-3.5 text-sm font-semibold text-white bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full hover:shadow-xl hover:shadow-indigo-500/25 active:scale-[0.98] transition-all"
+                >
+                  Get Started Free
+                  <ArrowRight className="w-4 h-4" />
+                </Link>
+                <a
+                  href="#how-it-works"
+                  className="inline-flex items-center justify-center gap-2 px-7 py-3.5 text-sm font-semibold text-slate-700 bg-white rounded-full border border-slate-200 hover:border-slate-300 hover:bg-slate-50 active:scale-[0.98] transition-all"
+                >
+                  See How It Works
+                </a>
               </div>
             </div>
-            <div className="bg-slate-50 p-12 border border-slate-200 relative overflow-hidden group">
-               <div className="absolute top-0 right-0 p-8 opacity-5">
-                 <svg className="w-64 h-64" fill="currentColor" viewBox="0 0 24 24"><path d="M13 3h-2v10h2V3zm4.83 2.17l-1.42 1.42C17.99 7.86 19 9.81 19 12c0 3.87-3.13 7-7 7s-7-3.13-7-7c0-2.19 1.01-4.14 2.58-5.42L6.17 5.17C4.23 6.82 3 9.26 3 12c0 4.97 4.03 9 9 9s9-4.03 9-9c0-2.74-1.23-5.18-3.17-6.83z"/></svg>
-               </div>
-               <h4 className="text-sm font-black uppercase tracking-[0.3em] mb-8">Atomic Lifecycle</h4>
-               <ul className="space-y-8 relative z-10">
-                 {[
-                   { label: 'Ingestion', desc: 'Registry validates asset UUID and hash integrity.' },
-                   { label: 'Locking', desc: 'Atomic field isolation prevents race conditions.' },
-                   { label: 'Broadcast', desc: 'WebSocket push to 500+ global edge nodes.' },
-                   { label: 'Reconcile', desc: 'Distributed terminals update local caches instantly.' }
-                 ].map((item, i) => (
-                   <li key={i} className="flex items-start space-x-6">
-                     <span className="text-blue-600 font-mono font-black pt-1">0{i+1}</span>
-                     <div>
-                       <span className="block text-xs font-black uppercase tracking-widest mb-1">{item.label}</span>
-                       <span className="block text-[10px] font-bold text-slate-400 uppercase leading-relaxed">{item.desc}</span>
-                     </div>
-                   </li>
-                 ))}
-               </ul>
+
+            {/* Dashboard Preview */}
+            <div className="relative">
+              <div className="absolute -inset-4 bg-gradient-to-r from-blue-500/20 to-indigo-500/20 rounded-3xl blur-2xl" />
+              <div className="relative bg-white rounded-3xl shadow-2xl shadow-slate-200/60 border border-slate-200/60 overflow-hidden p-6">
+                <div className="flex items-center gap-2 mb-5">
+                  <div className="w-3 h-3 rounded-full bg-red-400" />
+                  <div className="w-3 h-3 rounded-full bg-amber-400" />
+                  <div className="w-3 h-3 rounded-full bg-green-400" />
+                  <span className="ml-3 text-xs text-slate-400 font-medium">dashboard</span>
+                </div>
+                <div className="space-y-4">
+                  <div className="grid grid-cols-3 gap-3">
+                    <div className="rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 p-4 text-white">
+                      <p className="text-xs font-medium text-blue-100">Total Products</p>
+                      <p className="text-2xl font-bold mt-1">2,847</p>
+                    </div>
+                    <div className="rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 p-4 text-white">
+                      <p className="text-xs font-medium text-emerald-100">In Stock</p>
+                      <p className="text-2xl font-bold mt-1">2,614</p>
+                    </div>
+                    <div className="rounded-2xl bg-gradient-to-br from-violet-500 to-purple-600 p-4 text-white">
+                      <p className="text-xs font-medium text-violet-100">Low Stock</p>
+                      <p className="text-2xl font-bold mt-1">233</p>
+                    </div>
+                  </div>
+                  <div className="rounded-2xl bg-slate-50 border border-slate-100 p-4">
+                    <p className="text-xs font-medium text-slate-500 mb-3">Recent Activity</p>
+                    {['iPhone 15 Pro — Sold ×2', 'USB-C Cable — Restocked ×50', 'AirPods Pro — Sold ×1'].map((item, i) => (
+                      <div key={i} className="flex items-center gap-3 py-2 border-b border-slate-100 last:border-0">
+                        <div className="w-2 h-2 rounded-full bg-indigo-400" />
+                        <span className="text-sm text-slate-600">{item}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Feature Breakdown */}
-      <section className="py-40 bg-slate-50 border-y border-slate-200">
+      {/* Social Proof */}
+      <section className="py-16 bg-white border-y border-slate-100">
         <div className="max-w-7xl mx-auto px-6">
-          <div className="mb-24 flex flex-col md:flex-row md:items-end md:justify-between gap-8">
-            <div className="max-w-2xl">
-              <span className="text-blue-600 text-[10px] font-black uppercase tracking-[0.4em] mb-4 block underline underline-offset-8">Core Capabilities</span>
-              <h2 className="text-5xl md:text-6xl font-black uppercase tracking-tighter leading-none italic">Built for <br/><span className="text-blue-600">Enterprise.</span></h2>
-            </div>
-            <Link to="/api-docs" className="text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-blue-600">View Technical Documentation →</Link>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-1 px-1 bg-slate-200 border border-slate-200">
+          <p className="text-center text-sm font-medium text-slate-400 mb-10">Trusted by businesses worldwide</p>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-12 items-center justify-items-center">
             {[
-              { title: 'Atomic Locking', desc: 'No more race conditions. Every inventory change is an atomic event, ensuring stock integrity across all locations instantly.' },
-              { title: 'Edge Redundancy', desc: 'Our infrastructure utilizes globally distributed edge nodes to ensure sub-100ms processing wherever your terminal is located.' },
-              { title: 'Sacred Field Protection', desc: 'Enterprise-grade security rules prevent workers from modifying critical asset metadata like pricing or UUIDs.' },
-              { title: 'Real-time Telemetry', desc: 'Monitor terminal health, operator activity, and stock velocity through a unified operational command center.' },
-              { title: 'Offline-First Sync', desc: 'Terminals maintain a local ledger cache that reconciles automatically when network connectivity is re-established.' },
-              { title: 'Audit Trail Forensic', desc: 'Every single state change is logged with millisecond precision, creating an immutable history of your business.' }
-            ].map((f, i) => (
-              <div key={i} className="bg-white p-12 hover:bg-slate-900 hover:text-white transition-all duration-500 group">
-                <h4 className="text-xl font-black uppercase mb-6 tracking-tight group-hover:translate-x-2 transition-transform">{f.title}</h4>
-                <p className="text-sm text-slate-500 group-hover:text-slate-400 transition-colors leading-relaxed">{f.desc}</p>
+              { value: '500+', label: 'Businesses' },
+              { value: '10K+', label: 'Products Tracked' },
+              { value: '99.9%', label: 'Uptime' },
+              { value: '50K+', label: 'Sales Processed' },
+            ].map((stat, i) => (
+              <div key={i} className="text-center">
+                <p className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">{stat.value}</p>
+                <p className="text-sm text-slate-400 mt-1">{stat.label}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Command vs Control - Roles Overview */}
-      <section className="py-40 bg-white">
+      {/* Features */}
+      <section id="features" className="py-24 lg:py-32">
         <div className="max-w-7xl mx-auto px-6">
-           <div className="text-center mb-24">
-             <span className="text-blue-600 text-[10px] font-black uppercase tracking-[0.4em] mb-4 block italic">User Ecosystem</span>
-             <h2 className="text-5xl font-black uppercase tracking-tighter leading-none">Command <span className="text-slate-300 mx-4">||</span> Control.</h2>
-           </div>
-           <div className="grid grid-cols-1 lg:grid-cols-2 gap-px bg-slate-200 border border-slate-200">
-              <div className="bg-white p-16 group">
-                <div className="w-16 h-16 bg-slate-900 flex items-center justify-center mb-10 group-hover:bg-blue-600 transition-colors">
-                  <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                  </svg>
+          <div className="text-center max-w-2xl mx-auto mb-16">
+            <p className="text-sm font-semibold text-indigo-600 mb-3">Features</p>
+            <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4">
+              Everything you need to manage inventory
+            </h2>
+            <p className="text-slate-500 leading-relaxed">
+              Powerful tools wrapped in a simple interface. No steep learning curve—just results.
+            </p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {features.map((f, i) => (
+              <div
+                key={i}
+                className="group p-8 bg-white rounded-3xl border border-slate-200/60 shadow-sm hover:shadow-xl hover:shadow-slate-200/50 hover:-translate-y-1 transition-all duration-300"
+              >
+                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-50 to-indigo-50 border border-indigo-100/50 flex items-center justify-center mb-5 group-hover:scale-110 transition-transform">
+                  <f.icon className="w-6 h-6 text-indigo-600" />
                 </div>
-                <h3 className="text-3xl font-black uppercase tracking-tight mb-6">Admin <br/><span className="text-blue-600">Command.</span></h3>
-                <p className="text-slate-500 mb-10 leading-relaxed italic">The nerve center of the operation. Admins manage the global registry, provision personnel, and analyze high-velocity sales telemetry.</p>
-                <ul className="space-y-4 text-[10px] font-black uppercase tracking-widest text-slate-400">
-                   <li className="flex items-center space-x-3 text-slate-900"><div className="w-1.5 h-1.5 bg-blue-600"></div><span>Personnel Provisioning</span></li>
-                   <li className="flex items-center space-x-3 text-slate-900"><div className="w-1.5 h-1.5 bg-blue-600"></div><span>Master Registry CRUD</span></li>
-                   <li className="flex items-center space-x-3 text-slate-900"><div className="w-1.5 h-1.5 bg-blue-600"></div><span>Forensic Audit Logs</span></li>
-                </ul>
+                <h3 className="text-lg font-semibold text-slate-900 mb-2">{f.title}</h3>
+                <p className="text-sm text-slate-500 leading-relaxed">{f.desc}</p>
               </div>
-              <div className="bg-white p-16 group">
-                <div className="w-16 h-16 bg-white border-2 border-slate-900 flex items-center justify-center mb-10 group-hover:bg-slate-900 group-hover:text-white transition-all">
-                  <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-                  </svg>
-                </div>
-                <h3 className="text-3xl font-black uppercase tracking-tight mb-6">Worker <br/><span className="text-slate-400">Terminal.</span></h3>
-                <p className="text-slate-500 mb-10 leading-relaxed italic">Built for the front lines. A minimalist, lightning-fast terminal designed for high-concurrency checkouts and instant stock reconciliation.</p>
-                <ul className="space-y-4 text-[10px] font-black uppercase tracking-widest text-slate-400">
-                   <li className="flex items-center space-x-3"><div className="w-1.5 h-1.5 bg-slate-300"></div><span>Atomic Checkout Flow</span></li>
-                   <li className="flex items-center space-x-3"><div className="w-1.5 h-1.5 bg-slate-300"></div><span>Real-time Stock Feed</span></li>
-                   <li className="flex items-center space-x-3"><div className="w-1.5 h-1.5 bg-slate-300"></div><span>Edge-Node Persistence</span></li>
-                </ul>
-              </div>
-           </div>
+            ))}
+          </div>
         </div>
       </section>
 
-      {/* Industry Footprint - Sector Snapshot */}
-      <section className="py-40 bg-slate-900 text-white overflow-hidden relative">
-        <div className="absolute top-0 left-0 w-full h-full bg-[url('https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&q=80&w=2000')] opacity-5 mix-blend-overlay"></div>
-        <div className="max-w-7xl mx-auto px-6 relative z-10">
-           <div className="mb-24">
-             <span className="text-blue-500 text-[10px] font-black uppercase tracking-[0.4em] mb-4 block">Vertical Integration</span>
-             <h2 className="text-5xl font-black uppercase tracking-tighter leading-none italic italic">Market <br/>Sectors.</h2>
-           </div>
-           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-              {[
-                { sector: 'Global Retail', stat: '100ms Sync', img: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&q=80&w=400' },
-                { sector: 'Industrial Logistics', stat: 'Edge Redundancy', img: 'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&q=80&w=400' },
-                { sector: 'Automotive Parts', stat: 'SKU Hierarchy', img: 'https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?auto=format&fit=crop&q=80&w=400' },
-                { sector: 'Pharmaceuticals', stat: 'Field Security', img: 'https://images.unsplash.com/photo-1563213126-a4273aed2016?auto=format&fit=crop&q=80&w=400' }
-              ].map((item, i) => (
-                <div key={i} className="group cursor-pointer">
-                  <div className="overflow-hidden h-64 mb-6 border border-white/10 group-hover:border-blue-500 transition-all">
-                    <img src={item.img} className="w-full h-full object-cover filter grayscale group-hover:grayscale-0 group-hover:scale-110 transition-all duration-700" alt={item.sector} />
-                  </div>
-                  <h4 className="font-black uppercase tracking-tight text-xl mb-2">{item.sector}</h4>
-                  <span className="text-[10px] font-bold text-blue-500 uppercase tracking-widest">{item.stat}</span>
+      {/* How It Works */}
+      <section id="how-it-works" className="py-24 lg:py-32 bg-white">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="text-center max-w-2xl mx-auto mb-20">
+            <p className="text-sm font-semibold text-indigo-600 mb-3">How It Works</p>
+            <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4">
+              Get started in three simple steps
+            </h2>
+            <p className="text-slate-500 leading-relaxed">
+              No complicated setup. No training manuals. Just sign up and go.
+            </p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 relative">
+            {/* Connector line */}
+            <div className="hidden md:block absolute top-16 left-[20%] right-[20%] h-0.5 bg-gradient-to-r from-blue-200 via-indigo-200 to-violet-200" />
+            {steps.map((step, i) => (
+              <div key={i} className="relative text-center">
+                <div className="relative z-10 w-16 h-16 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-500/20">
+                  <step.icon className="w-7 h-7 text-white" />
                 </div>
-              ))}
-           </div>
+                <p className="text-xs font-semibold text-indigo-500 uppercase tracking-wider mb-2">Step {i + 1}</p>
+                <h3 className="text-lg font-semibold text-slate-900 mb-2">{step.title}</h3>
+                <p className="text-sm text-slate-500 leading-relaxed max-w-xs mx-auto">{step.desc}</p>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 
-      {/* Testimonial Section */}
-      <section className="py-40 bg-white">
+      {/* Roles Section */}
+      <section id="roles" className="py-24 lg:py-32">
         <div className="max-w-7xl mx-auto px-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-20 items-center">
-            <div className="space-y-12">
-              <span className="text-blue-600 text-[10px] font-black uppercase tracking-[0.4em] block italic">Operator Insights</span>
-              <p className="text-4xl font-black uppercase tracking-tighter leading-tight italic">
-                "WareNova eliminated our inventory drift within 48 hours of deployment. The sync speed is unlike anything we've tested in the cloud."
+          <div className="text-center max-w-2xl mx-auto mb-16">
+            <p className="text-sm font-semibold text-indigo-600 mb-3">Roles & Permissions</p>
+            <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4">
+              Designed for every member of your team
+            </h2>
+            <p className="text-slate-500 leading-relaxed">
+              Admins get full control. Workers get a focused, fast interface built for daily tasks.
+            </p>
+          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 max-w-5xl mx-auto">
+            {/* Admin Card */}
+            <div className="relative p-8 lg:p-10 bg-white rounded-3xl border border-slate-200/60 shadow-sm hover:shadow-xl hover:shadow-slate-200/50 transition-all duration-300">
+              <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-br from-blue-500/5 to-indigo-500/10 rounded-3xl" />
+              <div className="relative">
+                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center mb-6 shadow-lg shadow-indigo-500/20">
+                  <ShieldCheck className="w-7 h-7 text-white" />
+                </div>
+                <h3 className="text-xl font-bold text-slate-900 mb-2">Admin</h3>
+                <p className="text-sm text-slate-500 mb-8">Full access to manage your entire operation.</p>
+                <ul className="space-y-3">
+                  {[
+                    { icon: Package, text: 'Create, edit, and delete products' },
+                    { icon: Users, text: 'Add and manage team members' },
+                    { icon: BarChart3, text: 'View sales analytics and reports' },
+                    { icon: GitBranch, text: 'Manage branches and locations' },
+                    { icon: ShieldCheck, text: 'Set roles and permissions' },
+                  ].map((item, i) => (
+                    <li key={i} className="flex items-center gap-3 text-sm text-slate-600">
+                      <CheckCircle2 className="w-4 h-4 text-blue-500 flex-shrink-0" />
+                      <item.icon className="w-4 h-4 text-slate-400" />
+                      {item.text}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+
+            {/* Worker Card */}
+            <div className="relative p-8 lg:p-10 bg-white rounded-3xl border border-slate-200/60 shadow-sm hover:shadow-xl hover:shadow-slate-200/50 transition-all duration-300">
+              <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-br from-emerald-500/5 to-teal-500/10 rounded-3xl" />
+              <div className="relative">
+                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center mb-6 shadow-lg shadow-emerald-500/20">
+                  <Eye className="w-7 h-7 text-white" />
+                </div>
+                <h3 className="text-xl font-bold text-slate-900 mb-2">Worker</h3>
+                <p className="text-sm text-slate-500 mb-8">Focused tools for daily operations.</p>
+                <ul className="space-y-3">
+                  {[
+                    { icon: Eye, text: 'View product catalog and stock levels' },
+                    { icon: ShoppingBag, text: 'Process sales and transactions' },
+                    { icon: MessageSquare, text: 'Message admin directly' },
+                    { icon: Cloud, text: 'Upload product images' },
+                    { icon: Zap, text: 'Quick search and filtering' },
+                  ].map((item, i) => (
+                    <li key={i} className="flex items-center gap-3 text-sm text-slate-600">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-500 flex-shrink-0" />
+                      <item.icon className="w-4 h-4 text-slate-400" />
+                      {item.text}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* CTA Section */}
+      <section className="py-24 lg:py-32">
+        <div className="max-w-4xl mx-auto px-6">
+          <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-blue-600 via-indigo-600 to-violet-600 p-12 md:p-16 text-center shadow-2xl shadow-indigo-500/20">
+            {/* Decorative circles */}
+            <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2" />
+            <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/5 rounded-full translate-y-1/2 -translate-x-1/2" />
+            <div className="relative z-10">
+              <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
+                Ready to streamline your inventory?
+              </h2>
+              <p className="text-indigo-100 text-lg mb-10 max-w-xl mx-auto">
+                Join hundreds of businesses already using WareNova to manage their stock smarter. Start for free—no credit card needed.
               </p>
-              <div className="flex items-center space-x-6">
-                <div className="w-16 h-16 bg-slate-900 flex-shrink-0 flex items-center justify-center font-black text-white text-xs">LOGI</div>
-                <div>
-                  <span className="block font-black uppercase text-sm">Marcus Vane</span>
-                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Director of Logistics, Nexus.corp</span>
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                <Link
+                  to="/signup"
+                  className="inline-flex items-center justify-center gap-2 px-8 py-4 text-sm font-semibold text-indigo-700 bg-white rounded-full hover:bg-indigo-50 shadow-lg hover:shadow-xl active:scale-[0.98] transition-all"
+                >
+                  Get Started Free
+                  <ArrowRight className="w-4 h-4" />
+                </Link>
+                <Link
+                  to="/login"
+                  className="inline-flex items-center justify-center gap-2 px-8 py-4 text-sm font-semibold text-white rounded-full border border-white/30 hover:bg-white/10 active:scale-[0.98] transition-all"
+                >
+                  Login to Dashboard
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="bg-white border-t border-slate-100 py-16">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-12">
+            <div className="md:col-span-2">
+              <div className="flex items-center gap-2 mb-4">
+                <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-500/20">
+                  <LayoutDashboard className="w-4 h-4 text-white" />
                 </div>
+                <span className="text-lg font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">WareNova</span>
               </div>
+              <p className="text-sm text-slate-500 max-w-sm leading-relaxed">
+                Simple, powerful inventory management for businesses of all sizes. Built with care.
+              </p>
             </div>
-            <div className="grid grid-cols-2 gap-8">
-              <div className="p-8 bg-slate-50 border border-slate-200 shadow-xl group hover:bg-blue-600 hover:text-white transition-all">
-                <span className="block text-4xl font-black text-blue-600 group-hover:text-white mb-2 font-mono">94%</span>
-                <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 group-hover:text-blue-100">Reduction in Errors</p>
-              </div>
-              <div className="p-8 bg-slate-50 border border-slate-200 shadow-xl group hover:bg-blue-600 hover:text-white transition-all">
-                <span className="block text-4xl font-black text-blue-600 group-hover:text-white mb-2 font-mono">3.5x</span>
-                <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 group-hover:text-blue-100">Sales Velocity Inc.</p>
-              </div>
+            <div>
+              <h4 className="text-sm font-semibold text-slate-900 mb-4">Product</h4>
+              <ul className="space-y-2 text-sm text-slate-500">
+                <li><a href="#features" className="hover:text-indigo-600 transition-colors">Features</a></li>
+                <li><a href="#how-it-works" className="hover:text-indigo-600 transition-colors">How It Works</a></li>
+                <li><a href="#roles" className="hover:text-indigo-600 transition-colors">Roles</a></li>
+                <li><Link to="/login" className="hover:text-indigo-600 transition-colors">Login</Link></li>
+              </ul>
             </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Final CTA */}
-      <section className="py-40 bg-slate-50">
-        <div className="max-w-5xl mx-auto px-6">
-          <div className="bg-slate-900 p-20 relative overflow-hidden text-center shadow-[40px_40px_0px_#2563eb]">
-            <div className="absolute top-0 right-0 w-64 h-64 bg-blue-600/20 blur-3xl rounded-full translate-x-1/2 -translate-y-1/2"></div>
-            <h2 className="text-white text-6xl font-black uppercase tracking-tighter mb-10 leading-[0.8]">Ready to scale <br/>your operations?</h2>
-            <div className="flex flex-col sm:flex-row justify-center gap-6 relative z-10">
-              <Link to="/signup" className="px-12 py-6 bg-blue-600 text-white font-black uppercase tracking-widest text-xs hover:bg-white hover:text-slate-900 transition-all active:translate-y-1 shadow-2xl">
-                Provision Registry
-              </Link>
-              <Link to="/login" className="px-12 py-6 border-2 border-white/20 text-white font-black uppercase tracking-widest text-xs hover:bg-white/10 transition-all">
-                Operator Portal
-              </Link>
+            <div>
+              <h4 className="text-sm font-semibold text-slate-900 mb-4">Company</h4>
+              <ul className="space-y-2 text-sm text-slate-500">
+                <li><Link to="/about" className="hover:text-indigo-600 transition-colors">About</Link></li>
+                <li><Link to="/privacy-policy" className="hover:text-indigo-600 transition-colors">Privacy</Link></li>
+                <li><Link to="/terms-of-ops" className="hover:text-indigo-600 transition-colors">Terms</Link></li>
+                <li><Link to="/contact" className="hover:text-indigo-600 transition-colors">Contact</Link></li>
+              </ul>
             </div>
           </div>
-        </div>
-      </section>
-
-      {/* Global Footer */}
-      <footer className="bg-white border-t border-slate-100 py-24">
-        <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-4 gap-12">
-          <div className="col-span-1 md:col-span-2 space-y-8">
-            <div className="flex flex-col">
-              <span className="text-2xl font-black uppercase tracking-tighter text-blue-600">WareNova</span>
-              <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-slate-400 mt-2">© 2025 WareNova Systems LLC. <br/>Precision Operations Guaranteed.</span>
-            </div>
-            <div className="flex space-x-6 text-[10px] font-black uppercase tracking-widest text-slate-400 underline decoration-slate-200 underline-offset-4">
-              <a href="https://x.com/vicky_oofficial" className="hover:text-blue-600">Twitter</a>
-              <a href="https://github.com/vickyofficial77" className="hover:text-blue-600">Github</a>
-            </div>
-          </div>
-          <div className="space-y-6">
-            <h4 className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-900">Infrastructure</h4>
-            <div className="flex flex-col space-y-3 text-[10px] font-bold uppercase tracking-widest text-slate-400">
-              <Link to="/sync-core" className="hover:text-blue-600">Sync Core v2.5</Link>
-              <Link to="/security-rules" className="hover:text-blue-600">Security Rules</Link>
-              <Link to="/api-docs" className="hover:text-blue-600">Developer API</Link>
-              <Link to="/infrastructure" className="hover:text-blue-600">Network Map</Link>
-            </div>
-          </div>
-          <div className="space-y-6">
-            <h4 className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-900">Legal & Support</h4>
-            <div className="flex flex-col space-y-3 text-[10px] font-bold uppercase tracking-widest text-slate-400">
-              <Link to="/privacy-policy" className="hover:text-blue-600">Privacy Protocol</Link>
-              <Link to="/terms-of-ops" className="hover:text-blue-600">Terms of Ops</Link>
-              <Link to="/contact" className="hover:text-blue-600">Connect Support</Link>
-              <Link to="/about" className="hover:text-blue-600">About Mission</Link>
+          <div className="pt-8 border-t border-slate-100 flex flex-col md:flex-row justify-between items-center gap-4">
+            <p className="text-sm text-slate-400">&copy; 2025 WareNova. All rights reserved.</p>
+            <div className="flex gap-6 text-sm text-slate-400">
+              <a href="https://x.com/vicky_oofficial" className="hover:text-slate-600 transition-colors">Twitter</a>
+              <a href="https://github.com/vickyofficial77" className="hover:text-slate-600 transition-colors">GitHub</a>
             </div>
           </div>
         </div>
