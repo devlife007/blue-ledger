@@ -3,6 +3,7 @@ import firebase from 'firebase/compat/app';
 import { db } from '../firebase';
 import { useAuth } from '../context/AuthContext';
 import DashboardLayout from '../components/layout/DashboardLayout';
+import { adminNavItems, navigateToAdminPage } from '../navigation/adminNav';
 import Modal from '../components/ui/Modal';
 import Button from '../components/ui/Button';
 import Input from '../components/ui/Input';
@@ -21,9 +22,6 @@ import {
   FolderOpen,
   Loader2,
   X,
-  Package,
-  MessageSquare,
-  GitBranch,
 } from 'lucide-react';
 
 type ToastItem = { text: string; type: 'success' | 'error' } | null;
@@ -239,17 +237,9 @@ const Branches: React.FC = () => {
       <DashboardLayout
         title={s((profile as any)?.companyName) || 'Company'}
         subtitle="Admin panel"
-        navItems={[
-          { id: 'products', label: 'Products', icon: Package },
-          { id: 'workers', label: 'Workers', icon: Users },
-          { id: 'messages', label: 'Messages', icon: MessageSquare },
-          { id: 'branches', label: 'Branches', icon: GitBranch },
-        ]}
+        navItems={adminNavItems}
         currentPage="branches"
-        onNavigate={(page) => {
-          if (page === 'branches') return;
-          window.location.hash = `#/${page}`;
-        }}
+        onNavigate={navigateToAdminPage}
         onSignOut={signOut}
       >
         <div className="flex h-full items-center justify-center">
@@ -266,17 +256,9 @@ const Branches: React.FC = () => {
     <DashboardLayout
       title={s((profile as any)?.companyName) || 'Company'}
       subtitle="Admin panel"
-      navItems={[
-        { id: 'products', label: 'Products', icon: Package },
-        { id: 'workers', label: 'Workers', icon: Users },
-        { id: 'messages', label: 'Messages', icon: MessageSquare },
-        { id: 'branches', label: 'Branches', icon: GitBranch },
-      ]}
+      navItems={adminNavItems}
       currentPage="branches"
-      onNavigate={(page) => {
-        if (page === 'branches') return;
-        window.location.hash = `#/${page}`;
-      }}
+      onNavigate={navigateToAdminPage}
       onSignOut={signOut}
     >
       {toast && (

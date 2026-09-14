@@ -55,11 +55,11 @@ export default function Footer() {
                 Q
               </div>
               <span className="text-lg font-bold tracking-tight text-gray-900">
-                Quincaillerie <span className="text-blue-600">NG</span>
+                New Generation <span className="text-blue-600">Hardware</span>
               </span>
             </a>
             <p className="mt-4 max-w-xs text-sm leading-relaxed text-gray-500">
-              Vente de matériaux de construction à Kigali, Musanze et Muhanga — suivi des ventes et de l'inventaire en temps réel.
+              Construction material sales across Kigali, Musanze and Muhanga — real-time sales and inventory tracking.
             </p>
             <div className="mt-6 flex items-center gap-3">
               <a href="#" className="p-2 rounded-xl text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors">
@@ -79,7 +79,7 @@ export default function Footer() {
         </div>
         <div className="mt-12 border-t border-gray-100 pt-8 text-center">
           <p className="text-sm text-gray-400">
-            &copy; {new Date().getFullYear()} Quincaillerie Nouvelle Génération. Tous droits réservés.
+            &copy; {new Date().getFullYear()} New Generation Hardware. All rights reserved.
           </p>
         </div>
       </div>

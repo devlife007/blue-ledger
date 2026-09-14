@@ -6,7 +6,7 @@ interface StatCardProps {
   icon: ReactNode;
   iconGradient?: string;
   label: string;
-  value: string | number;
+  value: ReactNode;
   trend?: { value: string; positive: boolean };
   subtitle?: string;
   live?: boolean;

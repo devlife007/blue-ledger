@@ -3,6 +3,7 @@ import firebase from 'firebase/compat/app';
 import { auth, db } from '../firebase';
 import { UserProfile, UserRole } from '../types';
 import { authApi } from '../services/api';
+import { bootstrapAdmin } from '../services/bootstrapAdmin';
 
 interface AuthContextType {
   user: firebase.User | null;
@@ -33,69 +34,36 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       if (firebaseUser) {
         try {
-          let backendProfile: UserProfile = await authApi.getProfile();
-          setProfile(backendProfile);
-        } catch (err) {
-          // Backend profile missing or server unavailable. Fall back to Firestore,
-          // then push the Firestore profile to MongoDB so tenant keys (companyId)
-          // stay consistent between both stores.
-          console.warn('Backend profile sync failed, checking Firestore:', err);
-          try {
-            const docSnap = await db.collection('users').doc(firebaseUser.uid).get();
-            const firestoreProfile = docSnap.exists
-              ? (docSnap.data() as UserProfile)
-              : null;
-            if (firestoreProfile) {
-              setProfile(firestoreProfile);
-              try {
-                await authApi.registerProfile({
-                  uid: firestoreProfile.uid,
-                  name: firestoreProfile.name,
-                  email: firestoreProfile.email,
-                  companyName: firestoreProfile.companyName,
-                  companyId: firestoreProfile.companyId,
-                  role: firestoreProfile.role,
-                });
-              } catch (e) {
-                console.warn('Failed to mirror profile to backend:', e);
-              }
-            } else {
-              const userDoc = await db.collection('companies').doc(firebaseUser.uid).get();
-              if (userDoc.exists) {
-                const company = userDoc.data() as { companyName?: string };
-                setProfile({
-                  uid: firebaseUser.uid,
-                  name: firebaseUser.displayName || firebaseUser.email || '',
-                  email: firebaseUser.email || '',
-                  role: UserRole.ADMIN,
-                  companyId: firebaseUser.uid,
-                  companyName: company?.companyName,
-                  createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-                } as UserProfile);
-              } else {
-                setProfile(null);
-                const createdRecently =
-                  !!firebaseUser.metadata?.creationTime &&
-                  Date.now() - new Date(firebaseUser.metadata.creationTime).getTime() < 20000;
-                if (createdRecently) {
-                  setTimeout(async () => {
-                    try {
-                      const retrySnap = await db
-                        .collection('users')
-                        .doc(firebaseUser.uid)
-                        .get();
-                      if (retrySnap.exists) setProfile(retrySnap.data() as UserProfile);
-                    } catch {
-                      // ignore retry failure
-                    }
-                  }, 1500);
-                }
-              }
+          // Firestore is the source of truth for profiles. No REST/backend call
+          // on the critical path (the local API server is optional).
+          const docSnap = await db.collection('users').doc(firebaseUser.uid).get();
+          if (docSnap.exists) {
+            const firestoreProfile = docSnap.data() as UserProfile;
+            setProfile(firestoreProfile);
+            // Best-effort mirror to the optional backend (never blocks auth).
+            try {
+              await authApi.registerProfile({
+                uid: firestoreProfile.uid,
+                name: firestoreProfile.name,
+                email: firestoreProfile.email,
+                companyName: firestoreProfile.companyName,
+                companyId: firestoreProfile.companyId,
+                role: firestoreProfile.role,
+              });
+            } catch {
+              // Backend offline or missing — Firestore profile is already active.
             }
-          } catch (e) {
-            console.warn('Failed to fetch Firestore profile:', e);
-            setProfile(null);
+          } else {
+            // Console-created user with no profile yet. Bootstrap via the
+            // client-side path the deployed rules already allow (companies +
+            // users + branches). No Cloud Function / billing plan needed.
+            const provisioned = await bootstrapAdmin(firebaseUser, 'NG Hardware');
+            if (provisioned) setProfile(provisioned);
+            else setProfile(null);
           }
+        } catch (err) {
+          console.warn('Failed to fetch Firestore profile:', err);
+          setProfile(null);
         }
       } else {
         setProfile(null);
@@ -115,19 +83,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const currentUser = auth.currentUser;
     if (!currentUser) return null;
     try {
-      const backendProfile = await authApi.getProfile();
-      setProfile(backendProfile);
-      return backendProfile;
-    } catch {
-      try {
-        const docSnap = await db.collection('users').doc(currentUser.uid).get();
-        if (!docSnap.exists) return null;
+      const docSnap = await db.collection('users').doc(currentUser.uid).get();
+      if (docSnap.exists) {
         const firestoreProfile = docSnap.data() as UserProfile;
         setProfile(firestoreProfile);
         return firestoreProfile;
-      } catch {
-        return null;
       }
+      // Profile missing (e.g. console-created user). Bootstrap client-side.
+      const provisioned = await bootstrapAdmin(currentUser, 'NG Hardware');
+      if (provisioned) {
+        setProfile(provisioned);
+        return provisioned;
+      }
+      setProfile(null);
+      return null;
+    } catch (err) {
+      console.warn('refreshProfile failed:', err);
+      setProfile(null);
+      return null;
     }
   }, []);
 

@@ -2,7 +2,8 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import firebase from 'firebase/compat/app';
 import { db } from '../firebase';
 import { useAuth } from '../context/AuthContext';
-import DashboardLayout, { DashboardNavItem } from '../components/layout/DashboardLayout';
+import DashboardLayout from '../components/layout/DashboardLayout';
+import { adminNavItems, navigateToAdminPage } from '../navigation/adminNav';
 import Card from '../components/ui/Card';
 import Badge from '../components/ui/Badge';
 import Button from '../components/ui/Button';
@@ -10,13 +11,8 @@ import Input from '../components/ui/Input';
 import Toast from '../components/ui/Toast';
 import CopyButton from '../components/ui/CopyButton';
 import {
-  Package,
   Users,
-  MessageSquare,
   GitBranch,
-  BarChart3,
-  Settings as SettingsIcon,
-  Bell,
   Save,
   LogOut,
   Mail,
@@ -45,24 +41,6 @@ type WorkerDoc = {
 const s = (v: unknown) => String(v ?? '').trim();
 
 const tsSeconds = (t: any) => (t?.seconds ? Number(t.seconds) : 0);
-
-const NAV: DashboardNavItem[] = [
-  { id: 'products', label: 'Products', icon: Package },
-  { id: 'workers', label: 'Workers', icon: Users },
-  { id: 'messages', label: 'Messages', icon: MessageSquare },
-  { id: 'branches', label: 'Branches', icon: GitBranch },
-  { id: 'reports', label: 'Reports', icon: BarChart3 },
-  { id: 'activity', label: 'Activity', icon: Bell },
-  { id: 'settings', label: 'Settings', icon: SettingsIcon },
-];
-
-const handleNavigate = (page: string) => {
-  if (page === 'branches') { window.location.hash = '#/admin/branches'; return; }
-  if (page === 'reports') { window.location.hash = '#/admin/reports'; return; }
-  if (page === 'activity') { window.location.hash = '#/admin/activity'; return; }
-  if (page === 'settings') { window.location.hash = '#/admin/settings'; return; }
-  window.location.hash = `#/admin/${page}`;
-};
 
 const Settings: React.FC = () => {
   const { profile, user, signOut } = useAuth();
@@ -150,9 +128,9 @@ const Settings: React.FC = () => {
       <DashboardLayout
         title={s((profile as any)?.companyName) || 'Company'}
         subtitle="Admin panel"
-        navItems={NAV}
+        navItems={adminNavItems}
         currentPage="settings"
-        onNavigate={handleNavigate}
+        onNavigate={navigateToAdminPage}
         onSignOut={signOut}
       >
         <div className="flex h-full items-center justify-center">
@@ -169,9 +147,9 @@ const Settings: React.FC = () => {
     <DashboardLayout
       title={companyName}
       subtitle="Admin panel"
-      navItems={NAV}
+      navItems={adminNavItems}
       currentPage="settings"
-      onNavigate={handleNavigate}
+      onNavigate={navigateToAdminPage}
       onSignOut={signOut}
     >
       {toast && (

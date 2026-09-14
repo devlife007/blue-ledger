@@ -520,7 +520,7 @@ const WorkerDashboard: React.FC = () => {
               <div className="rounded-2xl bg-blue-50 p-3 text-blue-600"><MessageSquare className="h-6 w-6" /></div>
               <div>
                 <h2 className="text-xl font-black text-slate-950">New Message</h2>
-                <p className="text-sm text-slate-500">Send a message to your admin.</p>
+                <p className="text-sm text-slate-500">Send a message manager.</p>
               </div>
             </div>
 

@@ -249,7 +249,7 @@ export default function DashboardLayout({
               <img src="/logo.png" alt="Logo" className="h-full w-full object-contain" />
             </div>
             <span className="text-lg font-bold tracking-tight text-ink">
-              Quincaillerie <span className="text-brand">NG</span>
+              New Generation <span className="text-brand">Hardware</span>
             </span>
           </Link>
           <button

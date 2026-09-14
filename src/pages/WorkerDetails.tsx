@@ -3,7 +3,8 @@ import firebase from 'firebase/compat/app';
 import { useParams } from 'react-router-dom';
 import { db } from '../firebase';
 import { useAuth } from '../context/AuthContext';
-import DashboardLayout, { DashboardNavItem } from '../components/layout/DashboardLayout';
+import DashboardLayout from '../components/layout/DashboardLayout';
+import { adminNavItems, navigateToAdminPage } from '../navigation/adminNav';
 import Card from '../components/ui/Card';
 import Badge from '../components/ui/Badge';
 import Button from '../components/ui/Button';
@@ -13,18 +14,15 @@ import Toast from '../components/ui/Toast';
 import EmptyState from '../components/ui/EmptyState';
 import { SkeletonCard } from '../components/ui/Skeleton';
 import {
-  Package,
   Users,
   MessageSquare,
-  GitBranch,
-  BarChart3,
-  Settings,
-  Bell,
   ArrowLeft,
   Power,
   Trash2,
   Heart,
   MapPin,
+  KeyRound,
+  Mail,
 } from 'lucide-react';
 
 type WorkerDoc = {
@@ -37,6 +35,14 @@ type WorkerDoc = {
   branchId?: string;
   isActive?: boolean;
   companyName?: string;
+  createdAt?: any;
+};
+
+type CredentialDoc = {
+  uid: string;
+  email: string;
+  password: string;
+  companyId: string;
   createdAt?: any;
 };
 
@@ -72,24 +78,6 @@ const toDateSafe = (t: any): Date | null => {
   return null;
 };
 
-const NAV: DashboardNavItem[] = [
-  { id: 'products', label: 'Products', icon: Package },
-  { id: 'workers', label: 'Workers', icon: Users },
-  { id: 'messages', label: 'Messages', icon: MessageSquare },
-  { id: 'branches', label: 'Branches', icon: GitBranch },
-  { id: 'reports', label: 'Reports', icon: BarChart3 },
-  { id: 'activity', label: 'Activity', icon: Bell },
-  { id: 'settings', label: 'Settings', icon: Settings },
-];
-
-const handleNavigate = (page: string) => {
-  if (page === 'branches') { window.location.hash = '#/admin/branches'; return; }
-  if (page === 'reports') { window.location.hash = '#/admin/reports'; return; }
-  if (page === 'activity') { window.location.hash = '#/admin/activity'; return; }
-  if (page === 'settings') { window.location.hash = '#/admin/settings'; return; }
-  window.location.hash = `#/admin/${page}`;
-};
-
 const WorkerDetails: React.FC = () => {
   const { uid = '' } = useParams<{ uid: string }>();
   const { profile, user, signOut } = useAuth();
@@ -100,6 +88,7 @@ const WorkerDetails: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [branches, setBranches] = useState<BranchDoc[]>([]);
   const [messages, setMessages] = useState<MessageDoc[]>([]);
+  const [creds, setCreds] = useState<CredentialDoc | null>(null);
   const [toast, setToast] = useState<ToastItem>(null);
   const toastTimer = useRef<number | null>(null);
 
@@ -135,6 +124,7 @@ const WorkerDetails: React.FC = () => {
 
     let unsubBranches: (() => void) | undefined;
     let unsubMessages: (() => void) | undefined;
+    let unsubCreds: (() => void) | undefined;
 
     if (companyId) {
       unsubBranches = db
@@ -171,10 +161,37 @@ const WorkerDetails: React.FC = () => {
         );
     }
 
+    if (companyId && uid) {
+      unsubCreds = db
+        .collection('worker_credentials')
+        .doc(uid)
+        .onSnapshot(
+          (doc) => {
+            if (doc.exists) {
+              setCreds(doc.data() as CredentialDoc);
+            } else {
+              try {
+                const cached = window.sessionStorage.getItem(`worker-creds:${uid}`);
+                if (cached) {
+                  const parsed = JSON.parse(cached) as Partial<CredentialDoc>;
+                  if (parsed?.email && parsed?.password) {
+                    setCreds({ uid, email: parsed.email, password: parsed.password, companyId } as CredentialDoc);
+                    return;
+                  }
+                }
+              } catch {}
+              setCreds(null);
+            }
+          },
+          (err) => console.error('creds stream error:', err)
+        );
+    }
+
     return () => {
       unsubWorker();
       if (unsubBranches) unsubBranches();
       if (unsubMessages) unsubMessages();
+      if (unsubCreds) unsubCreds();
     };
   }, [uid, companyId]);
 
@@ -205,7 +222,7 @@ const WorkerDetails: React.FC = () => {
     try {
       await db.collection('users').doc(worker.uid).delete();
       showToast('Worker deleted.', 'success');
-      window.location.hash = '#/admin/workers';
+      navigateToAdminPage('workers');
     } catch (err: any) {
       console.error('delete worker failed:', err);
       showToast(err?.message || 'Failed to delete worker.', 'error');
@@ -217,9 +234,9 @@ const WorkerDetails: React.FC = () => {
       <DashboardLayout
         title={s((profile as any)?.companyName) || 'Company'}
         subtitle="Admin panel"
-        navItems={NAV}
+        navItems={adminNavItems}
         currentPage="workers"
-        onNavigate={handleNavigate}
+        onNavigate={navigateToAdminPage}
         onSignOut={signOut}
       >
         <div className="flex h-full items-center justify-center">
@@ -236,9 +253,9 @@ const WorkerDetails: React.FC = () => {
     <DashboardLayout
       title={companyName}
       subtitle="Admin panel"
-      navItems={NAV}
+      navItems={adminNavItems}
       currentPage="workers"
-      onNavigate={handleNavigate}
+      onNavigate={navigateToAdminPage}
       onSignOut={signOut}
     >
       {toast && (
@@ -252,7 +269,7 @@ const WorkerDetails: React.FC = () => {
           variant="secondary"
           size="sm"
           iconLeft={<ArrowLeft className="h-4 w-4" />}
-          onClick={() => { window.location.hash = '#/admin/workers'; }}
+          onClick={() => { navigateToAdminPage('workers'); }}
         >
           Back to Workers
         </Button>
@@ -272,7 +289,7 @@ const WorkerDetails: React.FC = () => {
                 <Button
                   variant="secondary"
                   iconLeft={<ArrowLeft className="h-4 w-4" />}
-                  onClick={() => { window.location.hash = '#/admin/workers'; }}
+                  onClick={() => { navigateToAdminPage('workers'); }}
                 >
                   Back to Workers
                 </Button>
@@ -308,6 +325,45 @@ const WorkerDetails: React.FC = () => {
                   </div>
                 </div>
               </div>
+            </Card>
+
+            <Card border className="shadow-sm">
+              <div className="mb-4 flex items-center gap-2.5">
+                <div className="grid h-9 w-9 place-items-center rounded-xl bg-brand/15 text-brand ring-1 ring-brand/30">
+                  <KeyRound className="h-4 w-4" />
+                </div>
+                <div>
+                  <h2 className="text-lg font-semibold text-ink">Sign-in Credentials</h2>
+                  <p className="text-xs text-muted">Share these with the worker so they can log in.</p>
+                </div>
+              </div>
+              {creds ? (
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  <div className="rounded-2xl bg-navy-800 p-4 ring-1 ring-line">
+                    <div className="flex items-center gap-1.5 text-xs font-medium uppercase tracking-wide text-muted">
+                      <Mail className="h-3.5 w-3.5" /> Email
+                    </div>
+                    <div className="mt-1.5 flex items-center justify-between gap-2">
+                      <span className="truncate font-mono text-sm font-semibold text-ink">{creds.email}</span>
+                      <CopyButton text={creds.email} />
+                    </div>
+                  </div>
+                  <div className="rounded-2xl bg-navy-800 p-4 ring-1 ring-line">
+                    <div className="flex items-center gap-1.5 text-xs font-medium uppercase tracking-wide text-muted">
+                      <KeyRound className="h-3.5 w-3.5" /> Password
+                    </div>
+                    <div className="mt-1.5 flex items-center justify-between gap-2">
+                      <span className="truncate font-mono text-sm font-semibold text-ink">{creds.password}</span>
+                      <CopyButton text={creds.password} />
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <p className="text-sm text-muted">
+                  No saved credentials for this worker. Recreate the worker to generate a new
+                  email &amp; password pair.
+                </p>
+              )}
             </Card>
 
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2">

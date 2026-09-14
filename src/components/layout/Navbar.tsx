@@ -24,7 +24,7 @@ export default function Navbar() {
             Q
           </div>
           <span className="text-lg font-bold tracking-tight text-gray-900">
-            Quincaillerie <span className="text-blue-600">NG</span>
+            New Generation <span className="text-blue-600">Hardware</span>
           </span>
         </a>
 
@@ -45,7 +45,7 @@ export default function Navbar() {
             Log in
           </Button>
           <Button variant="primary" size="sm">
-            Sign up
+            Sign in
           </Button>
         </div>
 
@@ -74,7 +74,7 @@ export default function Navbar() {
               Log in
             </Button>
             <Button variant="primary" size="sm" className="w-full justify-center">
-              Sign up
+              Sign in
             </Button>
           </div>
         </div>

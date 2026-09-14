@@ -36,6 +36,7 @@ const ProtectedRoute: React.FC<{
   allowedRole?: UserRole;
 }> = ({ children, allowedRole }) => {
   const { user, profile, loading } = useAuth();
+  const location = useLocation();
 
   if (loading) {
     return (
@@ -51,7 +52,7 @@ const ProtectedRoute: React.FC<{
   if (!user) return <Navigate to="/login" replace />;
 
   if (allowedRole && profile?.role !== allowedRole) {
-    return <Navigate to="/unauthorized" replace />;
+    return <Navigate to="/unauthorized" replace state={{ from: location }} />;
   }
 
   return <>{children}</>;
@@ -63,11 +64,11 @@ const App: React.FC = () => {
       <HashRouter>
         <ScrollToTop />
         <Routes>
-          <Route path="/" element={<Auth initialMode="signin" />} />
-          <Route path="/login" element={<Auth initialMode="signin" />} />
-          <Route path="/signup" element={<Auth initialMode="signup" />} />
-          <Route path="/signin" element={<Auth initialMode="signin" />} />
-          <Route path="/register" element={<Auth initialMode="signup" />} />
+          <Route path="/" element={<Auth />} />
+          <Route path="/login" element={<Auth />} />
+          <Route path="/signup" element={<Navigate to="/login" replace />} />
+          <Route path="/signin" element={<Auth />} />
+          <Route path="/register" element={<Navigate to="/login" replace />} />
           <Route path="/how-it-works" element={<HowItWorks />} />
           <Route path="/sectors" element={<Sectors />} />
           <Route path="/infrastructure" element={<Infrastructure />} />

@@ -84,3 +84,21 @@ export const deleteWorker = onCall(async (request) => {
 
   return {ok: true};
 });
+
+// ✅ forgotPassword: check the email belongs to an admin account BEFORE the
+// client calls sendPasswordResetEmail. The login page is anonymous, so a
+// client-side Firestore query on `users` is denied by rules (list requires
+// admin). We run the check server-side instead, which bypasses client rules.
+export const forgotPassword = onCall(async (request) => {
+  const email = String((request.data as any)?.email || "").trim().toLowerCase();
+  if (!email) throw new HttpsError("invalid-argument", "Email is required.");
+
+  const snap = await db
+    .collection("users")
+    .where("email", "==", email)
+    .where("role", "==", "admin")
+    .limit(1)
+    .get();
+
+  return {ok: !snap.empty};
+});

@@ -1,8 +1,10 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { db } from '../firebase';
 import { useAuth } from '../context/AuthContext';
-import DashboardLayout, { DashboardNavItem } from '../components/layout/DashboardLayout';
+import DashboardLayout from '../components/layout/DashboardLayout';
+import { adminNavItems, navigateToAdminPage } from '../navigation/adminNav';
 import StatCard from '../components/ui/StatCard';
+import MoneyValue from '../components/ui/MoneyValue';
 import Card from '../components/ui/Card';
 import Badge from '../components/ui/Badge';
 import Button from '../components/ui/Button';
@@ -11,12 +13,7 @@ import { SkeletonCard } from '../components/ui/Skeleton';
 import ProductImages from '../components/dashboard/ProductImages';
 import {
   Package,
-  Users,
-  MessageSquare,
-  GitBranch,
   BarChart3,
-  Settings,
-  Bell,
   TrendingUp,
   ShoppingBag,
   Download,
@@ -75,24 +72,6 @@ const startOfDay = (d: Date) => {
   const r = new Date(d);
   r.setHours(0, 0, 0, 0);
   return r;
-};
-
-const NAV: DashboardNavItem[] = [
-  { id: 'products', label: 'Products', icon: Package },
-  { id: 'workers', label: 'Workers', icon: Users },
-  { id: 'messages', label: 'Messages', icon: MessageSquare },
-  { id: 'branches', label: 'Branches', icon: GitBranch },
-  { id: 'reports', label: 'Reports', icon: BarChart3 },
-  { id: 'activity', label: 'Activity', icon: Bell },
-  { id: 'settings', label: 'Settings', icon: Settings },
-];
-
-const handleNavigate = (page: string) => {
-  if (page === 'branches') { window.location.hash = '#/admin/branches'; return; }
-  if (page === 'reports') { window.location.hash = '#/admin/reports'; return; }
-  if (page === 'activity') { window.location.hash = '#/admin/activity'; return; }
-  if (page === 'settings') { window.location.hash = '#/admin/settings'; return; }
-  window.location.hash = `#/admin/${page}`;
 };
 
 const Reports: React.FC = () => {
@@ -226,9 +205,9 @@ const Reports: React.FC = () => {
       <DashboardLayout
         title={s((profile as any)?.companyName) || 'Company'}
         subtitle="Admin panel"
-        navItems={NAV}
+        navItems={adminNavItems}
         currentPage="reports"
-        onNavigate={handleNavigate}
+        onNavigate={navigateToAdminPage}
         onSignOut={signOut}
       >
         <div className="flex h-full items-center justify-center">
@@ -252,9 +231,9 @@ const Reports: React.FC = () => {
     <DashboardLayout
       title={companyName}
       subtitle="Admin panel"
-      navItems={NAV}
+      navItems={adminNavItems}
       currentPage="reports"
-      onNavigate={handleNavigate}
+      onNavigate={navigateToAdminPage}
       onSignOut={signOut}
     >
       <div className="space-y-8">
@@ -316,13 +295,13 @@ const Reports: React.FC = () => {
                 icon={<TrendingUp className="h-5 w-5" />}
                 iconGradient="from-emerald-500 to-green-600"
                 label="Sales Value"
-                value={formatRWF(stats.salesValue)}
+                value={<MoneyValue amount={stats.salesValue} />}
               />
               <StatCard
                 icon={<BarChart3 className="h-5 w-5" />}
                 iconGradient="from-amber-500 to-orange-600"
                 label="Stock Value"
-                value={formatRWF(stats.stockValue)}
+                value={<MoneyValue amount={stats.stockValue} />}
               />
             </div>
 
@@ -349,11 +328,11 @@ const Reports: React.FC = () => {
                           {i + 1}
                         </span>
                         {p.imageUrls && p.imageUrls.length > 0 ? (
-                          <div className="w-12 shrink-0">
-                            <ProductImages images={p.imageUrls} productName={p.name} />
+                          <div className="w-14 shrink-0">
+                            <ProductImages images={p.imageUrls} productName={p.name} size="sm" />
                           </div>
                         ) : (
-                          <div className="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-navy-800 text-brand ring-1 ring-line">
+                          <div className="grid h-14 w-14 shrink-0 place-items-center rounded-xl bg-navy-800 text-brand ring-1 ring-line">
                             <Package className="h-5 w-5" />
                           </div>
                         )}

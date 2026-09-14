@@ -3,24 +3,17 @@ service cloud.firestore {
   match /databases/{database}/documents {
 
     // ==================================================================
-    // Blue-Ledger Firestore rules
-    // ------------------------------------------------------------------
-    // Tenant model:
-    //   admin.companyId == admin.uid   (admin's profile doc id == their UID
-    //                                   == the companyId they own)
-    //   worker .companyId == admin.uid (points at the owning admin)
-    //   worker .createdBy  == admin.uid (the admin who provisioned them)
-    //
-    // IMPORTANT (list queries):
-    //   Firestore does NOT filter query results for you — if a query could
-    //   match a doc the caller may not read, the WHOLE query is denied with
-    //   "Missing or insufficient permissions". Every list query in the app
-    //   therefore MUST include `.where('companyId', '==', <own companyId>)`.
-    //   All pages do this (AdminDashboard, WorkerDashboard, Branches,
-    //   Reports, Activity, Settings, WorkerDetails).
+    // Blue-Ledger Unified Firestore Rules
+    // NOTE: keep this file in sync with the rules deployed in the console.
+    // Required composite indexes (Firestore -> Indexes):
+    //   users: role ASC, companyId ASC, createdBy ASC
+    //   users: companyId ASC, role ASC
+    //   messages: companyId ASC, fromUid ASC
+    //   sales: companyId ASC, soldByUid ASC
+    //   sales: companyId ASC, soldAt DESC
     // ==================================================================
 
-    // ---- helpers -----------------------------------------------
+    // ---- helpers & utilities -----------------------------------------
 
     function signedIn() {
       return request.auth != null;
@@ -34,7 +27,6 @@ service cloud.firestore {
       return exists(/databases/$(database)/documents/users/$(request.auth.uid));
     }
 
-    // The calling user's company id (granting that their companyId is set).
     function myCompanyId() {
       return myProfile().data.companyId;
     }
@@ -43,6 +35,12 @@ service cloud.firestore {
       return signedIn()
         && hasProfile()
         && myProfile().data.role == 'admin';
+    }
+
+    function isWorker() {
+      return signedIn()
+        && hasProfile()
+        && myProfile().data.role == 'worker';
     }
 
     // Admin of THIS company (companyId == their own UID).
@@ -54,60 +52,126 @@ service cloud.firestore {
     function isMemberOf(companyId) {
       return signedIn()
         && hasProfile()
-        && myProfile().data.companyId == companyId;
+        && myCompanyId() == companyId;
     }
 
     function isWorkerOf(companyId) {
-      return signedIn()
-        && hasProfile()
-        && myProfile().data.role == 'worker'
-        && myProfile().data.companyId == companyId;
+      return isWorker() && isMemberOf(companyId);
     }
 
-    // ---- users: docId = Firebase UID ----------------------------
+    function isNonEmptyString(x) {
+      return x is string && x.size() > 0;
+    }
+
+    function isNumber(x) {
+      return x is int || x is float;
+    }
+
+    function validProductImages(data) {
+      return (
+        (!('imageUrls' in data) || (data.imageUrls is list && data.imageUrls.size() <= 8))
+        &&
+        (!('imagePublicIds' in data) || (data.imagePublicIds is list && data.imagePublicIds.size() <= 8))
+      );
+    }
+
+    function validMessageLikeDefaults(data) {
+      return (
+        (!('likedByAdmin' in data) || data.likedByAdmin == false)
+        &&
+        (!('likedAt' in data) || data.likedAt == null)
+        &&
+        (!('likedByUid' in data) || data.likedByUid == null)
+        &&
+        (!('likedByName' in data) || data.likedByName == null)
+      );
+    }
+
+    // ---- 1. users: docId = Firebase UID ----------------------------
 
     match /users/{uid} {
       allow get: if signedIn() && (
-        resource == null                                // own doc may not exist yet (signup race)
-        || resource.data.uid == request.auth.uid        // own profile
-        || (isAdmin() && resource.data.companyId == request.auth.uid) // admin reads a company member
+        resource == null                                    // own doc may not exist yet (signup race)
+        || resource.data.uid == request.auth.uid            // own profile
+        || (isAdmin() && resource.data.companyId == myCompanyId()) // admin reads a company member
       );
 
       // Admin queries workers of their company.
-      // Query shapes used:
-      //   users.where(companyId==N)                      (Branches)
-      //   users.where(companyId==N).where(role=='worker') (Settings)
-      //   users.where(role=='worker').where(companyId==N).where(createdBy==N) (AdminDashboard)
       allow list: if isAdminOf(resource.data.companyId);
 
-      // Signup creates own profile; admin provisions workers.
+      // Signup creates own profile; admin provisions workers with strict validation.
       allow create: if signedIn()
-          && request.resource.data.uid == request.auth.uid)               // signup/self
-        || (isAdmin()
-          && request.resource.data.companyId == request.auth.uid
-          && request.resource.data.role == 'worker'
-          && request.resource.data.createdBy == request.auth.uid);        // admin -> worker
+        && request.resource.data.uid == uid
+        && isNonEmptyString(request.resource.data.name)
+        && isNonEmptyString(request.resource.data.email)
+        && (
+          // Admin signup
+          (
+            request.auth.uid == uid
+            && request.resource.data.role == 'admin'
+            && request.resource.data.companyId == uid
+            && request.resource.data.email == request.auth.token.email
+            && isNonEmptyString(request.resource.data.companyName)
+            && request.resource.data.keys().hasOnly([
+              'uid','name','companyName','email','role','companyId','createdAt'
+            ])
+          )
+          ||
+          // Admin creating a worker
+          (
+            isAdmin()
+            && request.resource.data.role == 'worker'
+            && request.resource.data.companyId == myCompanyId()
+            && request.resource.data.createdBy == request.auth.uid
+            && request.resource.data.isActive == true
+            && request.resource.data.keys().hasOnly([
+              'uid','name','email','role','companyId','createdBy','isActive','createdAt'
+            ])
+          )
+        );
 
-      // Admin manages company members (activate/deactivate, assign branch/name).
-      allow update: if isAdminOf(resource.data.companyId);
+      // User self-edit or Admin managing company members
+      allow update: if signedIn() && hasProfile() && (
+        (
+          request.auth.uid == uid
+          && request.resource.data.uid == resource.data.uid
+          && request.resource.data.email == resource.data.email
+          && request.resource.data.role == resource.data.role
+          && request.resource.data.companyId == resource.data.companyId
+          && request.resource.data.createdAt == resource.data.createdAt
+          && (!('createdBy' in request.resource.data) || request.resource.data.createdBy == resource.data.createdBy)
+          && (!('isActive' in request.resource.data) || request.resource.data.isActive == resource.data.isActive)
+        )
+        ||
+        (
+          isAdmin()
+          && resource.data.companyId == myCompanyId()
+          && request.resource.data.uid == resource.data.uid
+          && request.resource.data.email == resource.data.email
+          && request.resource.data.role == resource.data.role
+          && request.resource.data.companyId == resource.data.companyId
+          && request.resource.data.createdAt == resource.data.createdAt
+        )
+      );
 
-      // Admin deletes company members.
-      allow delete: if isAdminOf(resource.data.companyId);
+      allow delete: if isAdmin() && resource.data.companyId == myCompanyId();
     }
 
-    // ---- companies: docId = admin's UID --------------------------
+    // ---- 2. companies: docId = admin's UID --------------------------
 
     match /companies/{companyId} {
       allow get: if signedIn() && (
         resource == null
         || request.auth.uid == companyId
         || resource.data.ownerUid == request.auth.uid
+        || isMemberOf(companyId)
       );
 
       allow list: if isAdmin();
 
       // Signup: admin creates the record bound to their own UID.
       allow create: if signedIn()
+        && request.auth.uid == companyId
         && request.resource.data.ownerUid == request.auth.uid
         && request.resource.data.companyId == request.auth.uid;
 
@@ -116,57 +180,153 @@ service cloud.firestore {
           || resource.data.ownerUid == request.auth.uid);
     }
 
-    // ---- branches: company-scoped --------------------------------
+    // ---- 3. branches: company-scoped --------------------------------
 
     match /branches/{branchId} {
-      allow get: if isMemberOf(resource.data.companyId);
-      allow list: if isMemberOf(resource.data.companyId);
+      allow get, list: if isMemberOf(resource.data.companyId);
 
-      // Signup seeds Kigali/Musanze/Muhanga; admin adds more later.
       allow create: if isAdmin()
+        && request.resource.data.companyId == myCompanyId()
+        && request.resource.data.createdBy == request.auth.uid;
+
+      allow update, delete: if isAdmin() && isMemberOf(resource.data.companyId);
+    }
+
+    // ---- 4. products: company-scoped inventory ----------------------
+
+    match /products/{productId} {
+      allow get, list: if isMemberOf(resource.data.companyId);
+
+      allow create: if isAdmin()
+        && request.resource.data.companyId == myCompanyId()
+        && request.resource.data.createdBy == request.auth.uid
+        && request.resource.data.keys().hasOnly([
+          'companyId','name','category','price',
+          'qtyUploaded','qtySold','qtyCurrent','status',
+          'createdAt','createdBy','updatedAt',
+          'lastSoldAt','lastSoldByUid','lastSoldByName',
+          'imageUrls','imagePublicIds'
+        ])
+        && isNonEmptyString(request.resource.data.name)
+        && request.resource.data.category is string
+        && isNumber(request.resource.data.price)
+        && request.resource.data.price >= 0
+        && request.resource.data.qtyUploaded is int
+        && request.resource.data.qtyUploaded >= 0
+        && request.resource.data.qtySold is int
+        && request.resource.data.qtySold == 0
+        && request.resource.data.qtyCurrent is int
+        && request.resource.data.qtyCurrent == request.resource.data.qtyUploaded
+        && request.resource.data.status in ['available','sold']
+        && validProductImages(request.resource.data);
+
+      allow update: if isMemberOf(resource.data.companyId) && (
+        // Admin edit / restock
+        (
+          isAdmin()
+          && request.resource.data.companyId == resource.data.companyId
+          && request.resource.data.createdBy == resource.data.createdBy
+          && request.resource.data.createdAt == resource.data.createdAt
+          && request.resource.data.qtyUploaded is int
+          && request.resource.data.qtyUploaded >= 0
+          && request.resource.data.qtySold is int
+          && request.resource.data.qtySold >= 0
+          && request.resource.data.qtyCurrent is int
+          && request.resource.data.qtyCurrent >= 0
+          && request.resource.data.qtySold <= request.resource.data.qtyUploaded
+          && request.resource.data.qtyCurrent <= request.resource.data.qtyUploaded
+          && request.resource.data.status in ['available','sold']
+          && validProductImages(request.resource.data)
+        )
+        ||
+        // Worker selling inventory (decrements qty)
+        (
+          isWorker()
+          && request.resource.data.diff(resource.data).changedKeys().hasOnly([
+            'qtyCurrent','qtySold','status',
+            'updatedAt','lastSoldAt','lastSoldByUid','lastSoldByName'
+          ])
+          && request.resource.data.qtyUploaded == resource.data.qtyUploaded
+          && request.resource.data.qtyCurrent is int
+          && request.resource.data.qtySold is int
+          && request.resource.data.qtyCurrent >= 0
+          && request.resource.data.qtyCurrent <= resource.data.qtyCurrent
+          && request.resource.data.qtySold >= resource.data.qtySold
+          && request.resource.data.qtySold <= request.resource.data.qtyUploaded
+          && (request.resource.data.qtySold - resource.data.qtySold) == (resource.data.qtyCurrent - request.resource.data.qtyCurrent)
+          && request.resource.data.status in ['available','sold']
+          && (
+            (request.resource.data.qtyCurrent == 0 && request.resource.data.status == 'sold')
+            || (request.resource.data.qtyCurrent > 0 && request.resource.data.status == 'available')
+          )
+          && request.resource.data.lastSoldByUid == request.auth.uid
+          && isNonEmptyString(request.resource.data.lastSoldByName)
+        )
+      );
+
+      allow delete: if isAdmin() && isMemberOf(resource.data.companyId);
+    }
+
+    // ---- 5. messages: company-scoped worker <-> admin chat -----------
+
+    match /messages/{messageId} {
+      allow get, list: if isMemberOf(resource.data.companyId)
+        && (isAdmin() || resource.data.fromUid == request.auth.uid);
+
+      allow create: if isMemberOf(request.resource.data.companyId)
+        && request.resource.data.fromUid == request.auth.uid
+        && isNonEmptyString(request.resource.data.fromName)
+        && isNonEmptyString(request.resource.data.text)
+        && request.resource.data.text.size() <= 800
+        && request.resource.data.keys().hasOnly([
+          'companyId','fromUid','fromName','fromEmail','text','createdAt',
+          'likedByAdmin','likedAt','likedByUid','likedByName'
+        ])
+        && validMessageLikeDefaults(request.resource.data);
+
+      // Admin likes/interacts with a message
+      allow update: if isAdmin()
+        && isMemberOf(resource.data.companyId)
+        && request.resource.data.companyId == resource.data.companyId
+        && request.resource.data.fromUid == resource.data.fromUid
+        && request.resource.data.fromName == resource.data.fromName
+        && (!('fromEmail' in resource.data) || request.resource.data.fromEmail == resource.data.fromEmail)
+        && request.resource.data.text == resource.data.text
+        && request.resource.data.createdAt == resource.data.createdAt
+        && request.resource.data.diff(resource.data).changedKeys().hasOnly([
+          'likedByAdmin','likedAt','likedByUid','likedByName'
+        ])
+        && request.resource.data.likedByAdmin is bool
+        && (request.resource.data.likedByUid == request.auth.uid || request.resource.data.likedByUid == null)
+        && (!('likedByName' in request.resource.data) || request.resource.data.likedByName is string || request.resource.data.likedByName == null);
+
+      allow delete: if isMemberOf(resource.data.companyId)
+        && (isAdmin() || resource.data.fromUid == request.auth.uid);
+    }
+
+    // ---- 6. worker_credentials: admin-only -------------------------
+
+    match /worker_credentials/{uid} {
+      allow get, list: if isAdminOf(resource.data.companyId);
+
+      allow create: if isAdmin()
+        && request.resource.data.uid == uid
         && request.resource.data.companyId == request.auth.uid
         && request.resource.data.createdBy == request.auth.uid;
 
       allow update, delete: if isAdminOf(resource.data.companyId);
     }
 
-    // ---- products: company-scoped inventory ----------------------
+    // ---- 7. sales: per-transaction log -----------------------------
 
-    match /products/{productId} {
-      // Query shape used: products.where(companyId==N)
-      allow get: if isMemberOf(resource.data.companyId);
-      allow list: if isMemberOf(resource.data.companyId);
-
-      allow create: if isAdmin()
-        && request.resource.data.companyId == request.auth.uid;
-
-      // Admin restocks / edits; worker sells (decrements qty) inside a
-      // transaction that reads the product first (tx.get needs get access).
-      allow update: if isAdminOf(resource.data.companyId)
-        || isWorkerOf(resource.data.companyId);
-
-      allow delete: if isAdminOf(resource.data.companyId);
-    }
-
-    // ---- messages: company-scoped worker <-> admin chat -----------
-
-    match /messages/{messageId} {
-      // Query shapes used:
-      //   messages.where(companyId==N)
-      //   messages.where(companyId==N).where(fromUid==U)
-      allow get: if isMemberOf(resource.data.companyId);
-      allow list: if isMemberOf(resource.data.companyId);
+    match /sales/{saleId} {
+      allow get, list: if isMemberOf(resource.data.companyId);
 
       allow create: if signedIn()
-        && request.resource.data.fromUid == request.auth.uid
-        && request.resource.data.companyId == myCompanyId();
+        && request.resource.data.companyId == myCompanyId()
+        && request.resource.data.soldByUid == request.auth.uid;
 
-      // Admin likes a message.
-      allow update: if isAdminOf(resource.data.companyId);
-
-      // Sender deletes their own message; admin deletes any company message.
-      allow delete: if resource.data.fromUid == request.auth.uid
-        || isAdminOf(resource.data.companyId);
+      allow update, delete: if isAdminOf(resource.data.companyId);
     }
   }
 }

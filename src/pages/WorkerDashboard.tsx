@@ -3,7 +3,7 @@ import firebase from 'firebase/compat/app';
 import { db } from '../firebase';
 import { useAuth } from '../context/AuthContext';
 import { ProductStatus, UserRole } from '../types';
-import { Package, MessageSquare, Send, Trash2, Heart, User, Search, Building2, LogOut, CheckCircle } from 'lucide-react';
+import { Package, MessageSquare, Send, Trash2, Heart, User, Search, Building2, LogOut, CheckCircle, MapPin, TrendingUp, ShoppingCart, Trophy, ChevronDown } from 'lucide-react';
 
 import StatCard from '../components/ui/StatCard';
 import Button from '../components/ui/Button';
@@ -29,6 +29,8 @@ type ProductDoc = {
   qtyCurrent: number;
   status: string;
   imageUrls?: string[];
+  lastSoldByUid?: string | null;
+  lastSoldByName?: string | null;
   updatedAt?: any;
 };
 
@@ -46,7 +48,21 @@ type MessageDoc = {
   likedByName?: string | null;
 };
 
-type ViewType = 'products' | 'messages';
+type BranchDoc = { id: string; companyId: string; name: string; location?: string };
+
+type SaleDoc = {
+  id: string;
+  companyId: string;
+  productId: string;
+  productName: string;
+  unitPrice: number;
+  unitsSold: number;
+  soldByUid: string;
+  soldByName?: string;
+  soldAt?: any;
+};
+
+type ViewType = 'products' | 'messages' | 'profile';
 
 const formatRWF = (amount: number): string =>
   new Intl.NumberFormat('rw-RW', {
@@ -70,6 +86,17 @@ const tsSeconds = (t: any) => (t?.seconds ? Number(t.seconds) : 0);
 const WorkerDashboard: React.FC = () => {
   const { profile, signOut } = useAuth();
   const [currentView, setCurrentView] = useState<ViewType>('products');
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!menuOpen) return;
+    const close = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) setMenuOpen(false);
+    };
+    document.addEventListener('mousedown', close);
+    return () => document.removeEventListener('mousedown', close);
+  }, [menuOpen]);
 
   const companyId = useMemo(() => s((profile as any)?.companyId), [profile]);
   const workerName = useMemo(() => s(profile?.name) || 'Worker', [profile?.name]);
@@ -119,6 +146,25 @@ const WorkerDashboard: React.FC = () => {
     );
   }, [messages, messageSearch]);
 
+  const [sales, setSales] = useState<SaleDoc[]>([]);
+
+  useEffect(() => {
+    if (!companyId || !profile?.uid) return;
+    const unsub = db
+      .collection('sales')
+      .where('companyId', '==', companyId)
+      .where('soldByUid', '==', profile.uid)
+      .onSnapshot(
+        (snap) => {
+          const list = snap.docs.map((d) => ({ id: d.id, ...(d.data() as any) })) as SaleDoc[];
+          list.sort((a, b) => tsSeconds(b.soldAt) - tsSeconds(a.soldAt));
+          setSales(list);
+        },
+        (err) => console.warn('worker sales stream error:', err)
+      );
+    return () => unsub();
+  }, [companyId, profile?.uid]);
+
   const dashboardStats = useMemo(() => {
     const totalProducts = products.length;
     const availableProducts = products.filter((p) => p.status === ProductStatus.AVAILABLE).length;
@@ -132,8 +178,18 @@ const WorkerDashboard: React.FC = () => {
     const outOfStockProducts = products.filter((p) => p.qtyCurrent === 0).length;
     const likedMessages = messages.filter((m) => m.likedByAdmin === true).length;
 
-    return { totalProducts, availableProducts, totalStockValue, totalSoldToday, lowStockProducts, outOfStockProducts, likedMessages };
-  }, [products, messages]);
+    const mySoldProducts = products.filter((p) => p.lastSoldByUid === profile?.uid && p.qtySold > 0).length;
+    const mySalesCount = sales.length;
+    const myUnitsSold = sales.reduce((sum, sale) => sum + Number(sale.unitsSold ?? 0), 0);
+    const mySalesValue = sales.reduce((sum, sale) => sum + Number(sale.unitPrice ?? 0) * Number(sale.unitsSold ?? 0), 0);
+
+    const todayKey = new Date().toDateString();
+    const salesToday = sales.filter((sale) => sale.soldAt?.toDate?.()?.toDateString() === todayKey);
+    const myUnitsSoldToday = salesToday.reduce((sum, sale) => sum + Number(sale.unitsSold ?? 0), 0);
+    const myRevenueToday = salesToday.reduce((sum, sale) => sum + Number(sale.unitPrice ?? 0) * Number(sale.unitsSold ?? 0), 0);
+
+    return { totalProducts, availableProducts, totalStockValue, totalSoldToday, lowStockProducts, outOfStockProducts, likedMessages, mySoldProducts, mySalesCount, myUnitsSold, mySalesValue, myUnitsSoldToday, myRevenueToday };
+  }, [products, messages, sales, profile?.uid]);
 
   useEffect(() => {
     if (!profile?.uid || !companyId) return;
@@ -196,6 +252,24 @@ const WorkerDashboard: React.FC = () => {
     return () => unsub();
   }, [profile?.uid, companyId]);
 
+  const [branches, setBranches] = useState<BranchDoc[]>([]);
+
+  useEffect(() => {
+    if (!companyId) return;
+    const unsub = db.collection('branches').where('companyId', '==', companyId).onSnapshot(
+      (snap) => setBranches(snap.docs.map((d) => ({ id: d.id, ...(d.data() as any) }))),
+      (err) => console.warn('worker branches stream error:', err)
+    );
+    return () => unsub();
+  }, [companyId]);
+
+  const branchName = useMemo(() => {
+    const id = s((profile as any)?.branchId);
+    if (!id) return '';
+    const b = branches.find((x) => x.id === id);
+    return b?.name || '';
+  }, [branches, profile]);
+
   const updateQty = (productId: string, raw: string, max: number) => {
     setQtyById((p) => ({ ...p, [productId]: clampInt(raw, 1, max) }));
   };
@@ -237,6 +311,18 @@ const WorkerDashboard: React.FC = () => {
           lastSoldAt: firebase.firestore.FieldValue.serverTimestamp(),
           updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
           qtyUploaded: uploaded,
+        });
+
+        const saleRef = db.collection('sales').doc();
+        tx.set(saleRef, {
+          companyId,
+          productId: p.id,
+          productName: p.name,
+          unitPrice: Number(cur.price ?? 0),
+          unitsSold: units,
+          soldByUid: profile.uid,
+          soldByName: workerName,
+          soldAt: firebase.firestore.FieldValue.serverTimestamp(),
         });
       });
 
@@ -388,8 +474,8 @@ const WorkerDashboard: React.FC = () => {
               return (
                 <Card key={p.id} variant="gradient" hover>
                   <div className="flex gap-4">
-                    <div className="w-20 h-20 shrink-0">
-                      <ProductImages images={p.imageUrls || []} productName={p.name} />
+                    <div className="w-14 shrink-0">
+                      <ProductImages images={p.imageUrls || []} productName={p.name} size="sm" />
                     </div>
                     <div className="min-w-0 flex-1">
                       <div className="flex flex-wrap items-start justify-between gap-2">
@@ -475,7 +561,7 @@ const WorkerDashboard: React.FC = () => {
               </div>
               <div>
                 <h2 className="text-lg font-bold text-ink">New Message</h2>
-                <p className="text-sm text-muted">Send a message to your admin.</p>
+                <p className="text-sm text-muted">Send a message to your manager.</p>
               </div>
             </div>
 
@@ -592,6 +678,161 @@ const WorkerDashboard: React.FC = () => {
     </div>
   );
 
+  const ProfileView = (
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-3xl font-black text-ink">My Profile</h1>
+        <p className="mt-1 text-muted">Your account details, branch and sales history.</p>
+      </div>
+
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
+        <div className="flex flex-col gap-6">
+          <Card>
+            <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex items-center gap-4">
+                <Avatar name={workerName} size="lg" />
+                <div>
+                  <div className="flex items-center gap-2">
+                    <div className="text-xl font-bold text-ink">{workerName || 'Worker'}</div>
+                    <Badge variant="info">Worker</Badge>
+                  </div>
+                  <div className="mt-0.5 text-sm text-muted">{workerEmail || 'No email on file'}</div>
+                  <div className="mt-2 flex flex-wrap items-center gap-2">
+                    {branchName ? (
+                      <span className="inline-flex items-center gap-1.5 rounded-full bg-brand/10 px-3 py-1 text-xs font-semibold text-brand ring-1 ring-brand/30">
+                        <MapPin className="h-3.5 w-3.5" /> {branchName}
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1.5 rounded-full bg-white/5 px-3 py-1 text-xs font-semibold text-muted ring-1 ring-line">
+                        <MapPin className="h-3.5 w-3.5" /> No branch assigned
+                      </span>
+                    )}
+                    <Badge variant="default">{companyName}</Badge>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </Card>
+
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+            <StatCard
+              icon={<ShoppingCart className="h-5 w-5" />}
+              iconGradient="from-blue-500 to-indigo-600"
+              label="Sold Today"
+              value={formatNumber(dashboardStats.myUnitsSoldToday)}
+              subtitle={`${dashboardStats.mySalesCount} total sales`}
+              live
+            />
+            <StatCard
+              icon={<TrendingUp className="h-5 w-5" />}
+              iconGradient="from-emerald-500 to-teal-600"
+              label="Revenue Today"
+              value={formatRWF(dashboardStats.myRevenueToday)}
+              subtitle={formatRWF(dashboardStats.mySalesValue) + ' total'}
+              live
+            />
+            <StatCard
+              icon={<TrendingUp className="h-5 w-5" />}
+              iconGradient="from-amber-500 to-orange-600"
+              label="Total Units Sold"
+              value={formatNumber(dashboardStats.myUnitsSold)}
+              subtitle="Lifetime volume"
+              live
+            />
+            <StatCard
+              icon={<Trophy className="h-5 w-5" />}
+              iconGradient="from-pink-500 to-rose-600"
+              label="Products Sold"
+              value={formatNumber(dashboardStats.mySoldProducts)}
+              subtitle="Distinct products"
+              live
+            />
+          </div>
+        </div>
+
+        <Card>
+          <div className="mb-4 flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-brand text-navy-950 shadow-lg shadow-black/40">
+              <Building2 className="h-5 w-5" />
+            </div>
+            <div>
+              <h2 className="text-lg font-bold text-ink">Company</h2>
+              <p className="text-xs text-muted">Your company branch details</p>
+            </div>
+          </div>
+          <div className="space-y-3">
+            <div className="rounded-2xl bg-navy-800 p-4 ring-1 ring-line">
+              <div className="text-xs text-muted">Company</div>
+              <div className="mt-0.5 font-semibold text-ink">{companyName}</div>
+            </div>
+            <div className="rounded-2xl bg-navy-800 p-4 ring-1 ring-line">
+              <div className="text-xs text-muted">Your branch</div>
+              <div className="mt-0.5 font-semibold text-ink">{branchName ? branchName : 'Not assigned'}</div>
+            </div>
+            <div className="rounded-2xl bg-navy-800 p-4 ring-1 ring-line">
+              <div className="text-xs text-muted">Account type</div>
+              <div className="mt-0.5 font-semibold text-ink">Worker</div>
+            </div>
+          </div>
+        </Card>
+      </div>
+
+      <Card>
+        <div className="mb-5 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-brand/10 text-brand">
+              <TrendingUp className="h-5 w-5" />
+            </div>
+            <div>
+              <h2 className="text-lg font-bold text-ink">My Sales History</h2>
+              <p className="text-sm text-muted">Every sale you recorded, newest first.</p>
+            </div>
+          </div>
+          <Badge variant="info">{formatNumber(dashboardStats.mySalesCount)}</Badge>
+        </div>
+
+        {sales.length === 0 ? (
+          <EmptyState
+            icon={<ShoppingCart className="h-8 w-8" />}
+            title="No sales yet"
+            description="Once you confirm sales, they'll appear here with dates and totals."
+          />
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="text-left text-xs font-medium text-muted">
+                <tr>
+                  <th className="px-4 py-3">Product</th>
+                  <th className="px-4 py-3">Unit Price</th>
+                  <th className="px-4 py-3">Qty</th>
+                  <th className="px-4 py-3">Total</th>
+                  <th className="px-4 py-3">Date</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-line">
+                {sales.map((sale) => (
+                  <tr key={sale.id} className="hover:bg-white/5">
+                    <td className="px-4 py-3">
+                      <div className="font-semibold text-ink">{sale.productName}</div>
+                    </td>
+                    <td className="px-4 py-3 text-muted">{formatRWF(sale.unitPrice)}</td>
+                    <td className="px-4 py-3 font-semibold text-ink">{formatNumber(sale.unitsSold)}</td>
+                    <td className="px-4 py-3 font-bold text-brand">{formatRWF(Number(sale.unitPrice) * Number(sale.unitsSold))}</td>
+                    <td className="px-4 py-3 text-muted">
+                      {sale.soldAt?.toDate?.()
+                        ? sale.soldAt.toDate().toLocaleString()
+                        : 'Just now'}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </Card>
+    </div>
+  );
+
   return (
     <div className="min-h-screen bg-navy-900 pb-14 text-ink">
       {toast && (
@@ -612,17 +853,79 @@ const WorkerDashboard: React.FC = () => {
             </div>
             <div>
               <div className="font-bold text-ink">{companyName}</div>
-              <div className="text-xs text-muted">Worker Dashboard</div>
+              <div className="flex items-center gap-1.5 text-xs text-muted">
+                <span>Worker Dashboard</span>
+                {branchName && (
+                  <>
+                    <span className="text-muted/50">·</span>
+                    <MapPin className="h-3 w-3" />
+                    <span>{branchName}</span>
+                  </>
+                )}
+              </div>
             </div>
           </div>
-          <div className="flex items-center gap-3">
-            <Avatar name={workerName} size="sm" />
+          <div className="relative flex items-center gap-3" ref={menuRef}>
             <button
-              onClick={signOut}
-              className="rounded-2xl bg-white/5 px-4 py-2 text-sm font-medium text-ink transition-colors hover:bg-red-500/10 hover:text-red-400"
+              onClick={() => setMenuOpen(!menuOpen)}
+              className="flex items-center gap-2 rounded-2xl bg-white/5 px-3 py-1.5 transition-colors hover:bg-white/10 cursor-pointer"
             >
-              <LogOut className="mr-1 inline h-4 w-4" /> Logout
+              <Avatar name={workerName} size="sm" />
+              <ChevronDown className={`h-3.5 w-3.5 text-muted transition-transform duration-200 ${menuOpen ? 'rotate-180' : ''}`} />
             </button>
+
+            {menuOpen && (
+              <div className="absolute right-0 top-full z-50 mt-2 w-56 overflow-hidden rounded-2xl border border-line bg-navy-800 shadow-2xl shadow-black/60">
+                <div className="border-b border-line px-4 py-3">
+                  <div className="text-sm font-bold text-ink">{workerName}</div>
+                  <div className="text-xs text-muted">{workerEmail}</div>
+                </div>
+                <div className="p-1.5">
+                  <button
+                    onClick={() => { setCurrentView('profile'); setMenuOpen(false); }}
+                    className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors cursor-pointer ${
+                      currentView === 'profile'
+                        ? 'bg-brand/10 text-brand'
+                        : 'text-ink hover:bg-white/5'
+                    }`}
+                  >
+                    <User className="h-4 w-4" />
+                    My Profile
+                  </button>
+                  <button
+                    onClick={() => { setCurrentView('products'); setMenuOpen(false); }}
+                    className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors cursor-pointer ${
+                      currentView === 'products'
+                        ? 'bg-brand/10 text-brand'
+                        : 'text-ink hover:bg-white/5'
+                    }`}
+                  >
+                    <Package className="h-4 w-4" />
+                    Products
+                  </button>
+                  <button
+                    onClick={() => { setCurrentView('messages'); setMenuOpen(false); }}
+                    className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors cursor-pointer ${
+                      currentView === 'messages'
+                        ? 'bg-brand/10 text-brand'
+                        : 'text-ink hover:bg-white/5'
+                    }`}
+                  >
+                    <MessageSquare className="h-4 w-4" />
+                    Messages
+                  </button>
+                </div>
+                <div className="border-t border-line p-1.5">
+                  <button
+                    onClick={signOut}
+                    className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-red-400 transition-colors hover:bg-red-500/10 cursor-pointer"
+                  >
+                    <LogOut className="h-4 w-4" />
+                    Sign out
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </nav>
@@ -658,7 +961,7 @@ const WorkerDashboard: React.FC = () => {
           </div>
         </div>
 
-        {currentView === 'products' ? ProductsView : MessagesView}
+        {currentView === 'products' ? ProductsView : currentView === 'messages' ? MessagesView : ProfileView}
       </div>
 
       {lightbox && (

@@ -6,10 +6,13 @@ import { ProductStatus, UserRole } from '../types';
 import {
   ShoppingBag, Users, Mail, TrendingUp, BarChart3, Package, MessageSquare, GitBranch,
   Plus, Trash2, Download, ImagePlus, UploadCloud, X, Heart, RefreshCw, CheckCircle, Bell, Eye, Settings,
+  ChevronDown,
 } from 'lucide-react';
 
-import DashboardLayout, { DashboardNavItem } from '../components/layout/DashboardLayout';
+import DashboardLayout from '../components/layout/DashboardLayout';
+import { adminNavItems, navigateToAdminPage, initialAdminTab, isTabPage } from '../navigation/adminNav';
 import StatCard from '../components/ui/StatCard';
+import MoneyValue from '../components/ui/MoneyValue';
 import Button from '../components/ui/Button';
 import Card from '../components/ui/Card';
 import Input from '../components/ui/Input';
@@ -114,6 +117,7 @@ const uploadImagesToCloudinary = async (files: File[]) => {
 };
 
 type ProductForm = { name: string; category: string; price: string; qty: string };
+const PRODUCT_CATEGORIES = ['Power Tools', 'Hand Tools', 'Fasteners and Hardware', 'Safety Equipment'];
 type WorkerForm = { name: string; email: string; password: string };
 type ProductFilters = { minPrice: string; maxPrice: string; minStock: string; maxStock: string; category: string };
 
@@ -145,7 +149,7 @@ interface ProductsSectionProps {
   onSelectDate: (date: Date | null) => void;
 }
 
-const ProductsSection: React.FC<ProductsSectionProps> = ({
+const ProductsSection = React.memo<ProductsSectionProps>(({
   filteredProducts, loadingProducts, stats, selectedDate, productForm, setProductForm, savingProduct,
   productImages, imagePreviews, addProduct, handleImageSelect, removeImage, restockById, updateRestock,
   restockingId, restock, deleteProduct, onSearch, searchMode, setSearchMode,
@@ -155,8 +159,8 @@ const ProductsSection: React.FC<ProductsSectionProps> = ({
     { label: 'Total Products', value: formatNumber(stats.totalProducts), icon: <ShoppingBag className="h-5 w-5" />, gradient: 'from-brand to-amber-500' },
     { label: 'Active Workers', value: formatNumber(stats.activeWorkers), icon: <Users className="h-5 w-5" />, gradient: 'from-emerald-500 to-teal-600' },
     { label: 'Messages', value: formatNumber(stats.totalMessages), icon: <Mail className="h-5 w-5" />, gradient: 'from-rose-500 to-pink-600' },
-    { label: 'Sold Value', value: formatRWF(stats.totalSoldValue), icon: <TrendingUp className="h-5 w-5" />, gradient: 'from-emerald-500 to-green-600' },
-    { label: 'Stock Value', value: formatRWF(stats.totalStockValue), icon: <BarChart3 className="h-5 w-5" />, gradient: 'from-amber-500 to-orange-600' },
+    { label: 'Sold Value', value: <MoneyValue amount={stats.totalSoldValue} />, icon: <TrendingUp className="h-5 w-5" />, gradient: 'from-emerald-500 to-green-600' },
+    { label: 'Stock Value', value: <MoneyValue amount={stats.totalStockValue} />, icon: <BarChart3 className="h-5 w-5" />, gradient: 'from-amber-500 to-orange-600' },
   ];
 
   return (
@@ -207,7 +211,20 @@ const ProductsSection: React.FC<ProductsSectionProps> = ({
 
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <Input placeholder="Product name" value={productForm.name} onChange={(e) => setProductForm((p) => ({ ...p, name: e.target.value }))} required />
-              <Input placeholder="Category" value={productForm.category} onChange={(e) => setProductForm((p) => ({ ...p, category: e.target.value }))} required />
+              <div className="relative">
+                <select
+                  value={productForm.category}
+                  onChange={(e) => setProductForm((p) => ({ ...p, category: e.target.value }))}
+                  required
+                  className="w-full appearance-none rounded-2xl border border-line bg-navy-800 px-4 py-3 pr-10 text-[14px] text-ink outline-none transition placeholder:text-muted/60 focus:border-brand/60 focus:ring-2 focus:ring-brand/20"
+                >
+                  <option value="" disabled>Select category…</option>
+                  {PRODUCT_CATEGORIES.map((c) => (
+                    <option key={c} value={c} className="bg-navy-800 text-ink">{c}</option>
+                  ))}
+                </select>
+                <ChevronDown className="pointer-events-none absolute right-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
+              </div>
               <Input type="number" min="0" placeholder="Price (RWF)" value={productForm.price} onChange={(e) => setProductForm((p) => ({ ...p, price: e.target.value }))} required />
               <Input type="number" min="0" placeholder="Quantity" value={productForm.qty} onChange={(e) => setProductForm((p) => ({ ...p, qty: e.target.value }))} required />
             </div>
@@ -269,7 +286,7 @@ const ProductsSection: React.FC<ProductsSectionProps> = ({
                   <tr key={product.id} className="hover:bg-white/5">
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
-                        <div className="w-20 shrink-0"><ProductImages images={product.imageUrls || []} productName={product.name} /></div>
+                        <div className="w-14 shrink-0"><ProductImages images={product.imageUrls || []} productName={product.name} size="sm" /></div>
                         <div>
                           <div className="font-semibold text-ink">{product.name}</div>
                           <div className="text-sm text-muted">{product.category}</div>
@@ -309,7 +326,7 @@ const ProductsSection: React.FC<ProductsSectionProps> = ({
       </Card>
     </div>
   );
-};
+});
 
 interface WorkersSectionProps {
   filteredWorkers: WorkerDoc[];
@@ -323,7 +340,7 @@ interface WorkersSectionProps {
   onSearch: (q: string) => void;
 }
 
-const WorkersSection: React.FC<WorkersSectionProps> = ({
+const WorkersSection = React.memo<WorkersSectionProps>(({
   filteredWorkers, workers, loadingWorkers, workerForm, setWorkerForm, creatingWorker, createWorker, deleteWorkerDoc, onSearch,
 }) => {
   return (
@@ -391,7 +408,7 @@ const WorkersSection: React.FC<WorkersSectionProps> = ({
       </Card>
     </div>
   );
-};
+});
 
 interface MessagesSectionProps {
   filteredMessages: MessageDoc[];
@@ -401,7 +418,7 @@ interface MessagesSectionProps {
   onSearch: (q: string) => void;
 }
 
-const MessagesSection: React.FC<MessagesSectionProps> = ({
+const MessagesSection = React.memo<MessagesSectionProps>(({
   filteredMessages, loadingMessages, toggleMessageLike, deleteMessage, onSearch,
 }) => {
   return (
@@ -464,11 +481,11 @@ const MessagesSection: React.FC<MessagesSectionProps> = ({
       )}
     </div>
   );
-};
+});
 
 const AdminDashboard: React.FC = () => {
   const { profile, signOut } = useAuth();
-  const [currentPage, setCurrentPage] = useState<Page>('products');
+  const [currentPage, setCurrentPage] = useState<Page>(() => initialAdminTab());
   const [selectedDate, setSelectedDate] = useState<Date | null>(() => new Date());
   const [searchQuery, setSearchQuery] = useState('');
   const [searchMode, setSearchMode] = useState<'basic' | 'advanced'>('basic');
@@ -772,6 +789,21 @@ const AdminDashboard: React.FC = () => {
         role: UserRole.WORKER, companyId, createdBy: adminUid, isActive: true,
         createdAt: firebase.firestore.FieldValue.serverTimestamp(),
       });
+      try {
+        await db.collection('worker_credentials').doc(user.uid).set({
+          uid: user.uid, email, password,
+          companyId, createdBy: adminUid,
+          createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+        });
+      } catch (persistErr) {
+        console.warn('Worker created but credentials could not be saved (check Firestore rules are deployed):', persistErr);
+      }
+      try {
+        window.sessionStorage.setItem(
+          `worker-creds:${user.uid}`,
+          JSON.stringify({ uid: user.uid, email, password, name })
+        );
+      } catch {}
       showToast(`Worker created: ${name}`, 'success');
       setCredentialModal({ name, email, password });
       setWorkerForm({ name: '', email: '', password: '' });
@@ -788,6 +820,8 @@ const AdminDashboard: React.FC = () => {
     if (!window.confirm('Delete this worker Firestore profile?')) return;
     try {
       await db.collection('users').doc(uid).delete();
+      await db.collection('worker_credentials').doc(uid).delete();
+      try { window.sessionStorage.removeItem(`worker-creds:${uid}`); } catch {}
       showToast('Worker removed', 'success');
     } catch (err: any) {
       showToast(err?.message || 'Delete worker failed.', 'error');
@@ -833,22 +867,14 @@ const AdminDashboard: React.FC = () => {
     );
   }
 
-  const navItems: DashboardNavItem[] = [
-    { id: 'products', label: 'Products', icon: Package },
-    { id: 'workers', label: 'Workers', icon: Users },
-    { id: 'messages', label: 'Messages', icon: MessageSquare },
-    { id: 'branches', label: 'Branches', icon: GitBranch },
-    { id: 'reports', label: 'Reports', icon: BarChart3 },
-    { id: 'activity', label: 'Activity', icon: Bell },
-    { id: 'settings', label: 'Settings', icon: Settings },
-  ];
+  const navItems = adminNavItems;
 
   const handleNavigate = useCallback((page: string) => {
-    if (page === 'branches' || page === 'reports' || page === 'activity' || page === 'settings') {
-      window.location.hash = '#/admin/' + page;
+    if (isTabPage(page)) {
+      handleNavClick(page);
       return;
     }
-    handleNavClick(page as Page);
+    navigateToAdminPage(page);
   }, [handleNavClick]);
 
   return (
@@ -871,22 +897,22 @@ const AdminDashboard: React.FC = () => {
         <div>
           <div className="text-xs font-bold uppercase tracking-widest text-brand">Administration</div>
           <h1 className="mt-1 text-2xl font-black tracking-tight">
-            Bonjour, {adminName} 👋
+            Welcome back, {adminName}
           </h1>
           <p className="mt-1 text-sm text-ink/70">
-            {companyName} · {new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+            {companyName} · {new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
           </p>
         </div>
         <div className="flex items-center gap-3">
           <div className="rounded-xl bg-white/5 px-4 py-2.5 backdrop-blur-sm">
             <div className="text-[10px] font-bold uppercase tracking-widest text-brand">Role</div>
-            <div className="text-sm font-bold">Administrateur</div>
+            <div className="text-sm font-bold">Administrator</div>
           </div>
           <div className="hidden rounded-xl bg-white/5 px-4 py-2.5 backdrop-blur-sm sm:block">
             <div className="text-[10px] font-bold uppercase tracking-widest text-brand">Status</div>
             <div className="flex items-center gap-1.5 text-sm font-bold">
               <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
-              Opérationnel
+              Operational
             </div>
           </div>
         </div>

@@ -44,21 +44,25 @@ export default function Button({
   return (
     <button
       disabled={disabled || loading}
+      aria-busy={loading}
       className={`
         inline-flex items-center justify-center font-medium rounded-xl
         transition-all duration-200 ease-out cursor-pointer
         disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100
+        ${loading ? 'cursor-wait' : ''}
         ${variantStyles[variant]}
         ${sizeStyles[size]}
         ${className}
       `}
       {...props}
     >
-      {loading ? (
-        <Loader2 className="h-4 w-4 animate-spin" />
-      ) : (
-        iconLeft && <span className="shrink-0">{iconLeft}</span>
-      )}
+      <span className="grid w-[18px] shrink-0 place-items-center">
+        {loading ? (
+          <Loader2 className="h-4 w-4 animate-spin" />
+        ) : (
+          iconLeft
+        )}
+      </span>
       <span>{children}</span>
       {!loading && iconRight && <span className="shrink-0">{iconRight}</span>}
     </button>
