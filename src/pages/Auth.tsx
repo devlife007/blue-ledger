@@ -205,20 +205,18 @@ const Auth: React.FC = () => {
     }
     setResetting(true);
     try {
-      // Verify the email maps to an admin account before sending a reset.
-      // Done via a Cloud Function because an anonymous client-side query on
-      // `users` is (correctly) denied by Firestore rules.
-      const check = auth.app.functions().httpsCallable('forgotPassword');
-      const result = await check({ email: target });
-      const ok = Boolean((result as any)?.data?.ok);
-      if (!ok) {
-        setError('No admin account was found with this email.');
-        return;
-      }
+      // Firebase sends the reset email directly — no Cloud Function needed.
+      // (Client Firestore rules correctly block anonymous queries on `users`,
+      // so we simply let Firebase validate the email for us.)
       await auth.sendPasswordResetEmail(target);
       setSuccess(`Password reset link sent to ${target}. Check your inbox.`);
     } catch (err: any) {
-      setError(err?.message || 'We could not send a reset email. Please try again.');
+      const code = err?.code;
+      if (code === 'auth/user-not-found' || code === 'auth/user-disabled' || code === 'auth/invalid-email') {
+        setError("We couldn't find an account for this email. Please check it and try again.");
+      } else {
+        setError(err?.message || 'We could not send a reset email. Please try again.');
+      }
     } finally {
       setResetting(false);
     }
@@ -376,7 +374,16 @@ const Auth: React.FC = () => {
                   />
                   Remember me
                 </label>
-               
+                {role === 'admin' && (
+                  <button
+                    type="button"
+                    onClick={handleForgotPassword}
+                    disabled={resetting}
+                    className="text-sm font-medium text-brand/90 transition-colors hover:text-brand disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
+                  >
+                    {resetting ? 'Sending…' : 'Forgot password?'}
+                  </button>
+                )}
               </div>
 
               <SubmitButton loading={loading}>Sign in</SubmitButton>
