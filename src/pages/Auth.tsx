@@ -146,6 +146,11 @@ const Auth: React.FC = () => {
     setLoading(true);
 
     try {
+      await auth.setPersistence(
+        rememberMe
+          ? firebase.auth.Auth.Persistence.LOCAL
+          : firebase.auth.Auth.Persistence.SESSION
+      );
       const userCredential = await auth.signInWithEmailAndPassword(email, password);
       const fireUser = userCredential.user;
       if (!fireUser) {
